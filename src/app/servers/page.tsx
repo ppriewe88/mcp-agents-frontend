@@ -3,15 +3,15 @@
 import styles from "./page.module.css";
 import { useEffect, useState } from "react";
 import { AddButton } from "@/ui/AddButton";
-import { Button } from "@/ui/Button";
-import { Card } from "@/ui/Card";
 import { ServerCreateModal } from "@/features/servers/ServerCreateModal";
 import type { MCPServer } from "@/models/mcpServer";
 import type { StoredItem } from "@/routing/storage";
 import { loadServers, saveServer } from "@/features/servers/servers.storage";
 import { listTools, parseTools } from "@/features/servers/servers.getTools";
 import type { ServerTool } from "@/models/mcpServerTool";
-import { toToolDisplay } from "@/models/mcpServerTool";
+import { ServersList } from "./ServersList";
+import { ServerToolsList } from "./ServerToolsList";
+import { ToolRegisterModal } from "@/features/servers/ToolRegisterModal";
 
 export default function ServersPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -23,6 +23,9 @@ export default function ServersPage() {
   const [toolLoadingById, setToolLoadingById] = useState<
     Record<string, boolean>
   >({});
+  const [toolsServerUrl, setToolsServerUrl] = useState<string | null>(null);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [selectedTool, setSelectedTool] = useState<ServerTool | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,12 +75,14 @@ export default function ServersPage() {
   const handleGetTools = async (server: StoredItem<MCPServer>) => {
     setToolLoadingById((prev) => ({ ...prev, [server.id]: true }));
     setToolsError(null);
+    setToolsServerUrl(server.url);
 
     try {
       const result = await listTools(server);
 
       if (!result.ok) {
-        setTools([]); // statt setToolsRaw([])
+        setTools([]);
+        setToolsServerUrl(null);
         setToolsError(result.error ?? "Failed to load tools.");
         return;
       }
@@ -85,7 +90,8 @@ export default function ServersPage() {
       const parsed = parseTools(result.data);
 
       if (!parsed.ok) {
-        setTools([]); // statt setToolsRaw([])
+        setTools([]);
+        setToolsServerUrl(null);
         setToolsError(parsed.error ?? "No valid tools parsed.");
         return;
       }
@@ -94,6 +100,16 @@ export default function ServersPage() {
     } finally {
       setToolLoadingById((prev) => ({ ...prev, [server.id]: false }));
     }
+  };
+
+  const handleRegisterTool = (tool: ServerTool) => {
+    setSelectedTool(tool);
+    setIsRegisterOpen(true);
+  };
+
+  const handleCloseRegister = () => {
+    setIsRegisterOpen(false);
+    setSelectedTool(null);
   };
 
   return (
@@ -105,155 +121,39 @@ export default function ServersPage() {
         />
       </div>
 
-      {/* SERVERS LIST */}
       <div className={styles.listArea}>
-        {isLoading && <div>Loading...</div>}
-        {loadError && <div className="formError">{loadError}</div>}
-
-        {!isLoading && !loadError && servers.length === 0 && (
-          <div>No servers yet.</div>
-        )}
-
-        {!isLoading && !loadError && servers.length > 0 && (
-          <div className={styles.grid}>
-            {servers.map((server) => (
-              <Card key={server.id} title={server.name}>
-                <div>{server.url}</div>
-
-                <div style={{ marginTop: 12 }}>
-                  <Button
-                    label={
-                      toolLoadingById[server.id] ? "Loading..." : "Get tools"
-                    }
-                    onClick={() => handleGetTools(server)}
-                    disabled={!!toolLoadingById[server.id]}
-                  />
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
+        <ServersList
+          servers={servers}
+          isLoading={isLoading}
+          loadError={loadError}
+          toolLoadingById={toolLoadingById}
+          onGetTools={handleGetTools}
+        />
       </div>
 
-      {/* TOOLS LOG */}
       <div className={styles.listArea}>
-        {toolsError && <div className="formError">{toolsError}</div>}
-
-        {!toolsError && tools.length === 0 && <div>No tools loaded.</div>}
-
-        {!toolsError && tools.length > 0 && (
-          <div className={styles.grid}>
-            {tools.map((tool) => (
-              <Card key={tool.function.name} title={tool.function.name}>
-                {tool.function.description && (
-                  <div style={{ marginTop: 6 }}>
-                    {tool.function.description}
-                  </div>
-                )}
-
-                {tool.function.parameters && (
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 6 }}>
-                      Parameters
-                    </div>
-                    <pre style={{ whiteSpace: "pre-wrap" }}>
-                      {JSON.stringify(tool.function.parameters, null, 2)}
-                    </pre>
-                  </div>
-                )}
-              </Card>
-            ))}
-            {/* {tools.map((tool) => {
-              const view = toToolDisplay(tool);
-
-              return (
-                <Card key={view.name} title={view.name}>
-                  <div>
-                    <div style={{ fontWeight: 600 }}>Name</div>
-                    <div>{view.name}</div>
-                  </div>
-
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ fontWeight: 600 }}>Description</div>
-                    <div>{view.description ?? "-"}</div>
-                  </div>
-
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ fontWeight: 600 }}>Required</div>
-                    {view.required.length === 0 ? (
-                      <div>-</div>
-                    ) : (
-                      <ul style={{ margin: 0, paddingLeft: 18 }}>
-                        {view.required.map((r) => (
-                          <li key={r}>{r}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ fontWeight: 600 }}>Parameters</div>
-
-                    {view.params.length === 0 ? (
-                      <div>-</div>
-                    ) : (
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 10,
-                        }}
-                      >
-                        {view.params.map((p) => (
-                          <div
-                            key={p.name}
-                            style={{
-                              borderTop: "1px solid #eee",
-                              paddingTop: 8,
-                            }}
-                          >
-                            <div>
-                              <div style={{ fontWeight: 600 }}>Parameter</div>
-                              <div>{p.name}</div>
-                            </div>
-
-                            <div style={{ marginTop: 6 }}>
-                              <div style={{ fontWeight: 600 }}>Title</div>
-                              <div>{p.title ?? "-"}</div>
-                            </div>
-
-                            <div style={{ marginTop: 6 }}>
-                              <div style={{ fontWeight: 600 }}>Type</div>
-                              <div>{p.type ?? "-"}</div>
-                            </div>
-
-                            <div style={{ marginTop: 6 }}>
-                              <div style={{ fontWeight: 600 }}>Required</div>
-                              <div>{p.required ? "yes" : "no"}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {typeof view.strict === "boolean" && (
-                    <div style={{ marginTop: 12 }}>
-                      <div style={{ fontWeight: 600 }}>Strict</div>
-                      <div>{view.strict ? "true" : "false"}</div>
-                    </div>
-                  )}
-                </Card>
-              );
-            })} */}
-          </div>
-        )}
+        <ServerToolsList
+          tools={tools}
+          toolsError={toolsError}
+          serverUrl={toolsServerUrl}
+          onRegisterTool={handleRegisterTool}
+        />
       </div>
 
       <ServerCreateModal
         isOpen={isCreateOpen}
         onClose={handleClose}
         onSave={handleSaveServer}
+      />
+
+      <ToolRegisterModal
+        key={`${toolsServerUrl ?? "no-server"}::${
+          selectedTool?.function.name ?? "no-tool"
+        }`}
+        isOpen={isRegisterOpen}
+        onClose={handleCloseRegister}
+        tool={selectedTool}
+        serverUrl={toolsServerUrl}
       />
     </div>
   );

@@ -113,7 +113,7 @@ a {
 }
 
 .modalPanel {
-  width: min(720px, 100%);
+  width: min(1200px, 100%);
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
@@ -219,4 +219,10 @@ a {
   align-items: center;
   gap: 8px;
   user-select: none;
+}
+
+.scrollBox {
+  max-height: 360px; /* nach Geschmack: 300–450 */
+  overflow-y: auto;
+  padding-right: 6px; /* Platz für Scrollbar */
 }

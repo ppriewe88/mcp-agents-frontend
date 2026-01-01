@@ -1,0 +1,23 @@
+{
+  // VSCode performance improvements
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/*/**": true,
+    "**/.hg/store/**": true,
+    "**/**/*.pyc": true,
+    "**/__pycache__": true,
+    ".mypy_cache/**": true,
+    ".pytest_cache/**": true,
+    ".ruff_cache/**": true,
+    ".venv/**": true
+  },
+  "search.exclude": {
+    "**/__pycache__": true,
+    ".mypy_cache/**": true,
+    ".pytest_cache/**": true,
+    ".ruff_cache/**": true,
+    ".venv/**": true
+  },
+  "workbench.colorTheme": "Default Dark Modern"
+}
