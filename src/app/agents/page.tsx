@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { AddButton } from "@/ui/AddButton";
 import { AgentCreateModal } from "@/features/agents/AgentCreateModal";
 import type { Agent } from "@/models/agent";
-import type { StoredItem } from "@/routing/storage";
+import type { StoredItem } from "@/storage/storage";
 import { loadAgents, saveAgent } from "@/features/agents/agents.storage";
 import { Card } from "@/ui/Card";
 

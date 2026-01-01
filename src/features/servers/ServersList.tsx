@@ -1,8 +1,8 @@
 "use client";
 
-import styles from "./page.module.css";
+import styles from "@/app/servers/page.module.css";
 import type { MCPServer } from "@/models/mcpServer";
-import type { StoredItem } from "@/routing/storage";
+import type { StoredItem } from "@/storage/storage";
 import { Card } from "@/ui/Card";
 import { Button } from "@/ui/Button";
 

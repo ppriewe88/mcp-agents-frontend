@@ -34,6 +34,7 @@ export type ToolArgsSchema = {
  * Mirrors backend ToolSchema.
  */
 export type ToolSchema = {
+  server_url: string;
   name_on_server: string;
   name_for_llm: string;
   description_for_llm: string;

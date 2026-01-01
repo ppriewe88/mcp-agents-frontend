@@ -1,0 +1,85 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.addButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.addButton:hover {
+  background: #f9fafb;
+}
+
+.listArea {
+  min-height: 200px;
+  border: 1px dashed #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.metaRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.metaLabel {
+  font-weight: 600;
+}
+
+.metaValue {
+  overflow-wrap: anywhere;
+}
+
+.description {
+  margin-top: 10px;
+}
+
+.argsList {
+  margin: 6px 0 0 0;
+  padding-left: 16px;
+  font-size: 12px;
+}
+
+.argItem {
+  margin-bottom: 8px;
+}
+
+.argServerName {
+  opacity: 0.6;
+  font-size: 11px;
+}
+
+.argMeta {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.argDescription {
+  margin-top: 2px;
+  font-size: 12px;
+}

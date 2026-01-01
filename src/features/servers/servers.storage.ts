@@ -1,5 +1,5 @@
 import { MCPServer } from "@/models/mcpServer";
-import { loadItems, saveItemToContainer, StoredItem } from "@/routing/storage";
+import { loadItems, saveItemToContainer, StoredItem } from "@/storage/storage";
 
 const CONTAINER = "servers";
 

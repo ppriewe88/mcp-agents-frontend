@@ -5,13 +5,13 @@ import { useEffect, useState } from "react";
 import { AddButton } from "@/ui/AddButton";
 import { ServerCreateModal } from "@/features/servers/ServerCreateModal";
 import type { MCPServer } from "@/models/mcpServer";
-import type { StoredItem } from "@/routing/storage";
+import type { StoredItem } from "@/storage/storage";
 import { loadServers, saveServer } from "@/features/servers/servers.storage";
 import { listTools, parseTools } from "@/features/servers/servers.getTools";
 import type { ServerTool } from "@/models/mcpServerTool";
-import { ServersList } from "./ServersList";
-import { ServerToolsList } from "./ServerToolsList";
-import { ToolRegisterModal } from "@/features/servers/ToolRegisterModal";
+import { ServersList } from "@/features/servers/ServersList";
+import { ServerToolsList } from "@/features/servers/ServerToolsList";
+import { ToolRegisterModal } from "@/features/tools/ToolRegisterModal";
 
 export default function ServersPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);

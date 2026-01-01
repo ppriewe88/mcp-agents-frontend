@@ -9,8 +9,8 @@ export function Sidebar() {
 
       <nav className="navList">
         <NavButton href="/agents" label="Agents" />
-        <NavButton href="/servers" label="MCP-Server" />
-        <NavButton href="/tools" label="Tools" />
+        <NavButton href="/servers" label="MCP-Servers" />
+        <NavButton href="/tools" label="MCP-Tools (registered)" />
         <NavButton href="/chat" label="Chat" />
       </nav>
     </aside>

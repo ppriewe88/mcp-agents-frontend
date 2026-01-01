@@ -6,6 +6,8 @@ import { Button } from "@/ui/Button";
 import { TextInput } from "@/ui/TextInput";
 import { TextArea } from "@/ui/TextArea";
 import type { ServerTool } from "@/models/mcpServerTool";
+import type { ToolSchema, ToolArg, EmptyDefault } from "@/models/toolSchema";
+import { saveToolSchema } from "@/features/tools/toolschemas.storage";
 
 type Props = {
   isOpen: boolean;
@@ -14,18 +16,35 @@ type Props = {
   serverUrl: string | null;
 };
 
+type ParamFieldKey = "name_for_llm" | "description" | "type" | "default";
+type ParamLlmDraft = Record<
+  string, // paramName
+  Record<ParamFieldKey, string>
+>;
+
+const LABELS: Record<ParamFieldKey, string> = {
+  name_for_llm: "Name (for LLM)",
+  description: "Description",
+  type: "Type",
+  default: "Default",
+};
+
+type ServerParamDef = {
+  type?: string;
+  description?: string;
+  default?: unknown;
+};
+
 export function ToolRegisterModal({ isOpen, onClose, tool, serverUrl }: Props) {
   const serverName = tool?.function.name ?? "";
   const serverDescription = tool?.function.description ?? "";
+
   const [nameForLlm, setNameForLlm] = useState(serverName);
   const [descriptionForLlm, setDescriptionForLlm] = useState(serverDescription);
 
-  type ParamFieldKey = "description" | "title" | "type" | "default";
-  type ParamLlmDraft = Record<
-    string, // paramName
-    Record<ParamFieldKey, string>
-  >;
   const [paramDraft, setParamDraft] = useState<ParamLlmDraft>({});
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const properties = useMemo(() => {
     const props = tool?.function.parameters?.properties ?? {};
@@ -36,20 +55,27 @@ export function ToolRegisterModal({ isOpen, onClose, tool, serverUrl }: Props) {
     paramName: string,
     field: ParamFieldKey
   ): string => {
-    const def = tool?.function.parameters?.properties?.[paramName];
-    if (!def) return "";
+    const rawDef = tool?.function.parameters?.properties?.[paramName];
+    if (!rawDef) return "";
+
+    const def = rawDef as ServerParamDef;
 
     switch (field) {
-      case "title":
-        return def.title ?? "";
+      case "name_for_llm":
+        return paramName;
+
       case "type":
         return def.type ?? "";
+
       case "description":
-        // ServerToolParameterDefinition hat aktuell keine description
-        return "";
-      case "default":
-        // ServerToolParameterDefinition hat aktuell kein default
-        return "";
+        return def.description ?? "";
+
+      case "default": {
+        const d = def.default;
+        if (d === undefined || d === null) return "";
+        return typeof d === "string" ? d : JSON.stringify(d);
+      }
+
       default:
         return "";
     }
@@ -62,7 +88,6 @@ export function ToolRegisterModal({ isOpen, onClose, tool, serverUrl }: Props) {
     const existing = paramDraft[paramName]?.[field];
     if (typeof existing === "string") return existing;
 
-    // Default: Serverwert als Vorbelegung
     return getServerParamValue(paramName, field);
   };
 
@@ -74,11 +99,12 @@ export function ToolRegisterModal({ isOpen, onClose, tool, serverUrl }: Props) {
     setParamDraft((prev) => ({
       ...prev,
       [paramName]: {
+        name_for_llm:
+          prev[paramName]?.name_for_llm ??
+          getServerParamValue(paramName, "name_for_llm"),
         description:
           prev[paramName]?.description ??
           getServerParamValue(paramName, "description"),
-        title:
-          prev[paramName]?.title ?? getServerParamValue(paramName, "title"),
         type: prev[paramName]?.type ?? getServerParamValue(paramName, "type"),
         default:
           prev[paramName]?.default ?? getServerParamValue(paramName, "default"),
@@ -87,9 +113,75 @@ export function ToolRegisterModal({ isOpen, onClose, tool, serverUrl }: Props) {
     }));
   };
 
-  const handleClose = () => {
-    onClose();
+  const parseDefaultValue = (raw: string): string | EmptyDefault | null => {
+    const v = raw.trim();
+    if (!v) return null;
+
+    if (v === "EmptyDefault" || v === '{"kind":"EmptyDefault"}') {
+      return { kind: "EmptyDefault" };
+    }
+    return v;
   };
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      setSaveError(null);
+
+      if (!tool) throw new Error("No tool selected.");
+      if (!serverUrl) throw new Error("No server url provided.");
+      if (!serverName.trim()) throw new Error("Tool name (server) missing.");
+
+      const params = tool.function.parameters;
+      const requiredList = params?.required ?? [];
+      const props = params?.properties ?? {};
+
+      const argList: ToolArg[] = Object.entries(props).map(
+        ([paramName, def]) => {
+          const llmName = getLlmParamValue(paramName, "name_for_llm");
+          const llmType = getLlmParamValue(paramName, "type");
+          const llmDescription = getLlmParamValue(paramName, "description");
+          const llmDefaultRaw = getLlmParamValue(paramName, "default");
+
+          const required = requiredList.includes(paramName);
+
+          return {
+            name_on_server: paramName,
+            name_for_llm: llmName?.trim() ? llmName.trim() : paramName,
+            description_for_llm: llmDescription?.trim()
+              ? llmDescription.trim()
+              : "",
+            type: llmType?.trim() ? llmType.trim() : def.type ?? "string",
+            required,
+            default: parseDefaultValue(llmDefaultRaw),
+          };
+        }
+      );
+
+      const schema: ToolSchema = {
+        server_url: serverUrl,
+        name_on_server: serverName,
+        name_for_llm: nameForLlm.trim() ? nameForLlm.trim() : serverName,
+        description_for_llm: descriptionForLlm?.trim()
+          ? descriptionForLlm.trim()
+          : "",
+        args_schema: {
+          type: "object",
+          properties: argList,
+          additionalProperties: false,
+        },
+      };
+
+      await saveToolSchema(schema);
+      onClose();
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "Save failed.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleClose = () => onClose();
 
   if (!isOpen) return null;
 
@@ -116,7 +208,6 @@ export function ToolRegisterModal({ isOpen, onClose, tool, serverUrl }: Props) {
               marginTop: 16,
             }}
           >
-            {/* LEFT: server */}
             <div className="formField">
               <div className="formLabel">Tool name (server)</div>
               <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>
@@ -124,7 +215,6 @@ export function ToolRegisterModal({ isOpen, onClose, tool, serverUrl }: Props) {
               </pre>
             </div>
 
-            {/* RIGHT: llm */}
             <div>
               <TextInput
                 label="Tool name (for llm)"
@@ -144,7 +234,6 @@ export function ToolRegisterModal({ isOpen, onClose, tool, serverUrl }: Props) {
               marginTop: 16,
             }}
           >
-            {/* LEFT: server */}
             <div className="formField">
               <div className="formLabel">Tool description (server)</div>
               <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>
@@ -152,7 +241,6 @@ export function ToolRegisterModal({ isOpen, onClose, tool, serverUrl }: Props) {
               </pre>
             </div>
 
-            {/* RIGHT: llm */}
             <div>
               <TextArea
                 label="Tool description (for llm)"
@@ -179,7 +267,6 @@ export function ToolRegisterModal({ isOpen, onClose, tool, serverUrl }: Props) {
                 >
                   {properties.map(([paramName]) => (
                     <div key={paramName}>
-                      {/* Parameter headline */}
                       <div
                         style={{
                           fontWeight: 600,
@@ -191,7 +278,6 @@ export function ToolRegisterModal({ isOpen, onClose, tool, serverUrl }: Props) {
                         Parameter: {paramName}
                       </div>
 
-                      {/* Matrix header */}
                       <div
                         style={{
                           display: "grid",
@@ -204,9 +290,12 @@ export function ToolRegisterModal({ isOpen, onClose, tool, serverUrl }: Props) {
                         <div className="formLabel">For LLM</div>
                       </div>
 
-                      {/* Matrix rows */}
-                      {["description", "title", "type", "default"].map(
-                        (row) => (
+                      {(Object.keys(LABELS) as ParamFieldKey[]).map((row) => {
+                        const label = LABELS[row];
+                        const serverVal = getServerParamValue(paramName, row);
+                        const llmVal = getLlmParamValue(paramName, row);
+
+                        return (
                           <div
                             key={row}
                             style={{
@@ -216,24 +305,24 @@ export function ToolRegisterModal({ isOpen, onClose, tool, serverUrl }: Props) {
                               marginBottom: 8,
                             }}
                           >
-                            {/* Server column */}
                             <div className="formField">
-                              <div className="formLabel">
-                                {row.charAt(0).toUpperCase() + row.slice(1)}
-                              </div>
-                              <div>-</div>
+                              <div className="formLabel">{label}</div>
+                              <div>{serverVal?.trim() ? serverVal : "-"}</div>
                             </div>
 
-                            {/* LLM column */}
-                            <div className="formField">
-                              <div className="formLabel">
-                                {row.charAt(0).toUpperCase() + row.slice(1)}
-                              </div>
-                              <div>-</div>
+                            <div>
+                              <TextInput
+                                label={label}
+                                value={llmVal}
+                                onChange={(v) =>
+                                  setLlmParamValue(paramName, row, v)
+                                }
+                                placeholder={serverVal}
+                              />
                             </div>
                           </div>
-                        )
-                      )}
+                        );
+                      })}
                     </div>
                   ))}
                 </div>
@@ -241,9 +330,15 @@ export function ToolRegisterModal({ isOpen, onClose, tool, serverUrl }: Props) {
             </div>
           </div>
 
-          {/* Footer */}
+          {saveError ? <div className="formError">{saveError}</div> : null}
+
           <div style={{ marginTop: 18, display: "flex", gap: 10 }}>
-            <Button label="Close" onClick={handleClose} />
+            <Button
+              label={isSaving ? "Saving..." : "Save as tool for agents!"}
+              onClick={handleSave}
+              disabled={isSaving || !tool || !serverUrl || !nameForLlm.trim()}
+            />
+            <Button label="Cancel" onClick={handleClose} disabled={isSaving} />
           </div>
         </>
       )}

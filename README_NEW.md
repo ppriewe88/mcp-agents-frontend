@@ -8,14 +8,20 @@ src/
 │ ├─ agents/
 │ │ ├─ page.tsx
 │ │ └─ page.module.css
+│ │
 │ ├─ servers/
 │ │ ├─ page.tsx
 │ │ └─ page.module.css
+│ │
 │ ├─ tools/
-│ │ └─ (derzeit leer / Platzhalter)
+│ │ ├─ page.tsx
+│ │ └─ page.module.css
+│ │
 │ ├─ api/
 │ │ └─ storage/
-│ │ └─ [container]/route.ts
+│ │ └─ [container]/
+│ │ └─ route.ts
+│ │
 │ ├─ layout.tsx
 │ ├─ page.tsx
 │ ├─ page.module.css
@@ -26,17 +32,24 @@ src/
 │ ├─ agents/
 │ │ ├─ AgentCreateModal.tsx
 │ │ └─ agents.storage.ts
+│ │
 │ ├─ servers/
 │ │ ├─ ServerCreateModal.tsx
 │ │ ├─ servers.storage.ts
-│ │ └─ servers.getTools.ts
-│ └─ tools/
-│ └─ (noch leer)
+│ │ ├─ servers.getTools.ts
+│ │ ├─ ServersList.tsx
+│ │ └─ ServerToolsList.tsx
+│ │
+│ ├─ toolschemas/
+│ │ ├─ ToolRegisterModal.tsx
+│ │ ├─ toolschemas.storage.ts
+│ │ └─ ToolSchemasList.tsx
 │
 ├─ models/
 │ ├─ agent.ts
 │ ├─ mcpServer.ts
-│ └─ mcpServerTool.ts
+│ ├─ mcpServerTool.ts
+│ └─ toolSchema.ts
 │
 ├─ routing/
 │ └─ storage.ts
@@ -47,18 +60,21 @@ src/
 └─ ui/
 ├─ AddButton.tsx
 ├─ Button.tsx
-└─ Card.tsx
+├─ Card.tsx
+├─ CheckBox.tsx
+├─ Modal.tsx
+├─ TextInput.tsx
+└─ TextArea.tsx
 
-2. Architekturprinzipien (wichtig für Weiterarbeit)
+2. Architekturprinzipien (bindend)
+   UI / Feature-Trennung
 
-UI-Komponenten (ui/) sind dumm
-→ keine Fachlogik, nur Props, keine Datenbeschaffung
+ui/
+ausschließlich dumme, wiederverwendbare UI-Komponenten
+→ keine Fachlogik, kein State, keine Datenbeschaffung
 
-Fachlogik liegt in features/\*
-
-\*.storage.ts: Persistenz (Cosmos DB über API)
-
-\*.getTools.ts: externe Calls (Python MCP Backend)
+features/\*
+fachliche Logik, Modals, Listen, Page-nahe Komponenten
 
 Persistenz
 
@@ -66,202 +82,226 @@ ausschließlich über Next.js API Routes
 
 Cosmos DB Zugriff nur serverseitig
 
-generischer Storage-Layer (routing/storage.ts)
+generischer Storage-Layer: routing/storage.ts
 
-Containername wird per URL bestimmt
+Containername wird per URL bestimmt (/api/storage/[container])
 
 MCP-Kommunikation
 
-niemals über Next.js
+niemals über Next.js API
 
 ausschließlich über externes Python-FastAPI-Backend
 
-Frontend ruft dieses Backend direkt auf (Runtime-Daten, keine Persistenz)
+Frontend ruft MCP-Backend direkt auf
 
-3. Projektzweck & Ziel
-   Kurzfassung
+MCP-Daten sind Runtime-Daten, nicht automatisch persistiert
 
-Ein webbasiertes System zur Verwaltung von Agents, MCP-Servern und deren Tools, mit sauberer Trennung zwischen:
+3. Projektzweck & Ziel (Kurzfassung)
 
-Persistierten Konfigurationsdaten (Agents, Server)
+Webbasiertes Verwaltungssystem für:
 
-Dynamischen Runtime-Daten (Tools von MCP-Servern)
+Agents
 
-3.1 Agents
+MCP-Server
 
-Werden im Frontend angelegt (/agents)
+registrierte Tools
 
-Datenmodell (models/agent.ts) enthält u.a.:
+mit klarer Trennung zwischen:
 
-name
+persistierten Konfigurationsdaten
+(Agents, Server, ToolSchemas)
 
-description
+dynamischen Runtime-Daten
+(ServerTools vom MCP-Backend)
 
-systemPrompt
+4. Fachliche Domänen
+   4.1 Agents
 
-directAnswerValidationPrompt
+Verwaltung über /agents
 
-directAnswersAllowed
+Datenmodell: models/agent.ts
 
-Agents werden in Cosmos DB gespeichert
+Persistenz: Cosmos DB (agents)
 
-Aktueller Status: voll funktionsfähig
+UI:
 
-3.2 MCP-Server
+AgentsPage
 
-Werden im Frontend angelegt (/servers)
+AgentCreateModal
 
-Datenmodell (models/mcpServer.ts):
+Status: voll funktionsfähig
 
-name
+4.2 MCP-Server
 
-url
+Verwaltung über /servers
 
-Werden in Cosmos DB gespeichert
+Datenmodell: models/mcpServer.ts
 
-Pro Server kann zur Laufzeit:
+Persistenz: Cosmos DB (servers)
 
-„Get tools“ ausgelöst werden
+Laufzeitfunktion:
 
-→ Call an Python-FastAPI (POST /get_tools)
+„Get tools“
 
-→ Übergabe der server.url
+POST an Python-Backend (/get_tools)
 
-Aktueller Status: voll funktionsfähig
+UI:
 
-3.3 Tools (aktueller Fokus)
+ServersList
+
+ServerToolsList
+
+Status: voll funktionsfähig
+
+4.3 Tools (aktueller Fokus)
 Herkunft
 
 Tools kommen dynamisch von MCP-Servern
 
-Rückgabeformat ist MCP-/OpenAI-kompatibel (type: "function")
+Format: MCP / OpenAI Tool-Format (type: "function")
 
-Beispiel:
+Trennung der Tool-Ebenen
+Ebene Zweck Persistenz
+ServerTool rohe Runtime-Tools vom MCP ❌
+ToolSchema registriertes Tool für Agents ✅
+Agent-Tool-Zuweisung (noch nicht implementiert) ❌ 5. Tool-Datenmodelle (Frontend)
+5.1 ServerTool (Runtime)
 
-{
-"type": "function",
-"function": {
-"name": "add",
-"description": "Add two numbers together",
-"parameters": {
-"type": "object",
-"properties": {
-"a": { "title": "A", "type": "integer" },
-"b": { "title": "B", "type": "integer" }
-},
-"required": ["a", "b"],
-"additionalProperties": false
-},
-"strict": true
-}
-}
+Datei: models/mcpServerTool.ts
 
-Tool-Modell (Ist-Zustand)
+Rohformat nah am Backend
 
-models/mcpServerTool.ts
+normalizeTool, validateTool
 
-ServerTool: Raw-Tool (nahe am Backend-JSON)
+nicht persistiert
 
-normalizeTool, validateTool: minimal, defensiv
+5.2 ToolSchema (persistiert)
 
-ToolDisplay: UI-DTO
+Datei: models/toolSchema.ts
 
-toToolDisplay(tool):
+Frontend-Spiegel des Python-Backends
 
-wandelt JSON-Schema in UI-freundliche Struktur:
+ToolSchema
 
-Name
+server_url
+name_on_server
+name_for_llm
+description_for_llm
+args_schema
 
-Description
+ToolArgsSchema
 
-Required-Liste
+type: "object"
+properties: ToolArg[] // explizit Liste
+additionalProperties: false
 
-Parameter-Liste (name, title, type, required)
+ToolArg
 
-Wichtig:
-Tools werden noch nicht persistiert.
+name_on_server
+name_for_llm
+description_for_llm
+type
+required
+default (string | EmptyDefault | null)
 
-3.4 Aktuelle Tool-Verarbeitung
+6. Tool-Registrierung (Create)
+   ToolRegisterModal
 
-servers.getTools.ts
+Ort: features/toolschemas/ToolRegisterModal.tsx
 
-listTools() → raw Backend-Response (unknown)
+Verwendung:
 
-extractToolsArray() → robust gegen verschiedene Response-Formate
+auf der Servers-Page („Register Tool“)
 
-parseTools():
+Zweck:
 
-unknown → ServerTool[]
+aus ServerTool → ToolSchema
 
-normalize + validate
+UI:
 
-Page (/servers/page.tsx)
+Server-Face vs. LLM-Face
 
-speichert ServerTool[] im State
+explizite Pflege von:
 
-rendert Anzeige über toToolDisplay(tool)
+Tool-Namen (LLM)
 
-Anzeige ist vollständig aufgedröselt, kein JSON-Dump mehr
+Parameter-Namen (LLM)
 
-4. Geplante Weiterentwicklung (wichtig für später)
-   4.1 Registrierte Tools (zukünftiges Ziel)
+Parameter-Beschreibung / Typ / Default
 
-Aus einem ServerTool soll später ein persistierbares Tool-Schema entstehen:
+Persistenz:
 
-Erweiterung von ToolDisplay um:
+saveToolSchema
 
-LLM-spezifische Namen
+Container: toolschemas
 
-Alias / Override-Felder
+Status: funktional
 
-evtl. Default-Werte
+7. Tools-Übersicht (persistierte Tools)
+   ToolsPage (/tools)
 
-Ein „registriertes Tool“ enthält:
+lädt alle ToolSchemas aus Cosmos
 
-referenzierte server.url
+keine Create-Funktion (bewusst)
 
-das Tool-Schema
+UI:
 
-optionale Überschreibungen
+ToolSchemasList
 
-Diese registrierten Tools:
+Card-basierte Darstellung
 
-werden persistiert
+Anzeige:
 
-können Agents zugewiesen werden
+Tool (LLM) ↔ Tool (Server)
 
-➡️ Das ist bewusst noch nicht implementiert, aber das aktuelle Modell ist darauf vorbereitet.
+Server-URL
 
-5. Mentales Modell für zukünftige Arbeit („geführtes Programmieren“)
+vollständige Args-Liste
 
-Wenn du mir dieses Projekt in einem neuen Chat beschreibst, ist mein Arbeitsmodus:
+name_for_llm
 
-Nichts automatisch persistieren, was Runtime-Daten sind
+name_on_server
 
-Erst:
+type
 
-saubere Modelle
+required / optional
 
-klare UI-Darstellung
+description_for_llm
 
-Dann:
+8. Aktueller Stand „Edit“
 
-explizite Einführung eines neuen Konzepts („registriertes Tool“)
+ToolSchemasList besitzt Edit-Button
 
-Trennung strikt einhalten:
+Klick liefert aktuell nur das Tool (kein Modal)
 
-Server-Tool ≠ registriertes Tool ≠ Agent-Tool-Zuweisung
+kein Update / Upsert implementiert
 
-Änderungen immer:
+bewusster Stop-Point erreicht
+
+9. Mentales Arbeitsmodell („geführtes Programmieren“)
+
+Für zukünftige Schritte gilt weiterhin:
+
+keine impliziten Feature-Sprünge
+
+Änderungen:
 
 minimal
 
 schichtenspezifisch
 
-ohne unnötige Abstraktion
+nachvollziehbar
 
-Wenn du morgen oder später wiederkommst, kannst du einfach sagen:
+Reihenfolge:
 
-„Wir sind beim MCP-Tool-Projekt, Stand wie zuletzt zusammengefasst.“
+saubere Modelle
 
-Dann mache ich genau hier weiter.
+klare UI-Darstellung
+
+erst dann neue Konzepte (z. B. Edit-Modus, Zuweisungen)
+
+10. Nächste logisch mögliche Mini-Schritte (nicht umgesetzt)
+
+Tool → Agent-Zuweisung
+
+Agent-Schema (Datenmodell) dafür noch erweitern

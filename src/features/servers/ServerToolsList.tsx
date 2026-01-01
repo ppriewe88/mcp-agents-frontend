@@ -1,6 +1,6 @@
 "use client";
 
-import styles from "./page.module.css";
+import styles from "@/app/servers/page.module.css";
 import { Card } from "@/ui/Card";
 import type { ServerTool } from "@/models/mcpServerTool";
 import { Button } from "@/ui/Button";
