@@ -20,18 +20,18 @@ src/
 │ ├─ api/
 │ │ └─ storage/
 │ │ └─ [container]/
-│ │ └─ route.ts // generische Persistenz-API
+│ │ └─ route.ts // generische Cosmos-Persistenz-API
 │ │
 │ ├─ layout.tsx
 │ ├─ page.tsx // Startseite
 │ ├─ page.module.css
-│ ├─ globals.css // globale Styles (inkl. scrollContainer)
+│ ├─ globals.css
 │ └─ favicon.ico
 │
 ├─ features/
 │ ├─ agents/
-│ │ ├─ AgentCreateModal.tsx // Create-Flow für Agents
-│ │ ├─ AgentsList.tsx // Card-Liste mit Agent-Metadaten
+│ │ ├─ AgentCreateModal.tsx // Create-Modal für Agents
+│ │ ├─ AgentsList.tsx // Card-Liste (clickable)
 │ │ └─ agents.storage.ts
 │ │
 │ ├─ servers/
@@ -47,16 +47,14 @@ src/
 │ │ └─ ToolSchemasList.tsx
 │
 ├─ models/
-│ ├─ agent.ts // Agent inkl. Tool-Zuweisung
+│ ├─ agent.ts
 │ ├─ mcpServer.ts
 │ ├─ mcpServerTool.ts
 │ └─ toolSchema.ts
 │
-├─ server/
-│ └─ cosmos.ts // Cosmos-DB-Anbindung (serverseitig)
-│
 ├─ storage/
-│ └─ storage.ts // generischer Storage-Layer (Client)
+│ ├─ cosmos.ts // serverseitige Cosmos-Client-Config
+│ └─ storage.ts // generischer Client-Storage
 │
 └─ ui/
 ├─ AddButton.tsx
@@ -64,20 +62,20 @@ src/
 ├─ Card.tsx
 ├─ CheckBox.tsx
 ├─ Modal.tsx
-├─ ScrollContainer.tsx // einfacher Scroll-Wrapper (children)
+├─ ScrollContainer.tsx
 ├─ TextInput.tsx
 └─ TextArea.tsx
 
 2. Architekturprinzipien (bindend)
-   UI / Feature-Trennung
+   2.1 UI / Feature-Trennung
 
 ui/
 
-ausschließlich dumme, wiederverwendbare UI-Komponenten
+rein visuelle, wiederverwendbare Komponenten
 
-kein Fachwissen, kein Datenzugriff, kein Persistenzcode
+kein Fachwissen, keine Persistenz
 
-Beispiele: Card, Modal, ScrollContainer, Inputs
+z. B. Card, Modal, Button
 
 features/\*
 
@@ -85,32 +83,42 @@ fachliche Logik
 
 Page-nahe Komponenten (Listen, Modals)
 
-Orchestrierung von UI + Storage
+orchestrieren UI + Storage
 
-Persistenz
+2.2 Persistenz
 
 ausschließlich über Next.js API Routes
 
-Cosmos DB Zugriff nur serverseitig
+Cosmos-Zugriff nur serverseitig
 
-generischer Storage-Layer: storage/storage.ts
+generische Route:
+/api/storage/[container]
 
-Containername wird über URL bestimmt
-(/api/storage/[container])
+generischer Client-Layer: storage/storage.ts
 
-MCP-Kommunikation
+Wichtig:
+Der Containername wird serverseitig ins Dokument geschrieben (container Feld), damit jedes geladene Item seine Herkunft kennt.
 
-niemals über Next.js API
+3. Card-Konzept (aktueller Stand)
+   type CardProps = {
+   title: string;
+   dataId: string;
+   dataContainer: string; // Herkunft (Cosmos oder "runtime")
+   children?: ReactNode;
+   onClick?: () => void;
+   };
 
-ausschließlich über externes Python FastAPI Backend
+dataContainer dient nur Debugging / DOM-Lesbarkeit
 
-Frontend ruft MCP-Backend direkt auf
+keine Business-Logik liest aus dem DOM
 
-MCP-Daten sind Runtime-Daten
+Logik nutzt immer das komplette Item im State (onOpen(item))
 
-keine automatische Persistenz von MCP-Ergebnissen
+Für Runtime-Daten (z. B. ServerTools):
 
-3. Projektzweck & Ziel (Kurzfassung)
+dataContainer="runtime"
+
+4. Projektzweck & Ziel
 
 Webbasiertes Verwaltungssystem für:
 
@@ -118,28 +126,20 @@ Agents
 
 MCP-Server
 
-registrierte Tools
+persistierte Tools (ToolSchemas)
 
-mit klarer Trennung zwischen:
+klare Trennung zwischen:
 
-persistierten Konfigurationsdaten
+Kategorie Beispiele Persistenz
+Konfiguration Agents, MCP-Server, ToolSchemas ✅ Cosmos
+Runtime-Daten ServerTools vom MCP ❌ 5. Fachliche Domänen
+5.1 Agents
 
-Agents
-
-MCP-Server
-
-ToolSchemas
-
-dynamischen Runtime-Daten
-
-ServerTools vom MCP-Backend
-
-4. Fachliche Domänen
-   4.1 Agents
-
-Verwaltung: /agents
+Page: /agents
 
 Datenmodell: models/agent.ts
+
+Persistenz: Cosmos (agents)
 
 Agent enthält:
 
@@ -149,37 +149,33 @@ Prompt-Konfiguration
 
 Kontrollflags (directAnswersAllowed, onlyOneModelCall, maxToolcalls)
 
-Liste von ToolSchemas (Vorbereitung für Zuweisung)
-
-Persistenz: Cosmos DB (agents)
+vorbereitete Tool-Referenzen
 
 UI:
 
 AgentsPage
 
+AgentsList (Card-basiert, klickbar)
+
 AgentCreateModal
 
-AgentsList (Card-basierte Übersicht)
-
 Status:
+
 ✔ Create
+
 ✔ List / Anzeige
-❌ Edit
-❌ Tool-Zuweisung (vorbereitet)
 
-4.2 MCP-Server
+⚠️ Edit: in Arbeit (separates Edit-Modal geplant)
 
-Verwaltung: /servers
+❌ Tool-Zuweisung
 
-Datenmodell: models/mcpServer.ts
+5.2 MCP-Server
 
-Persistenz: Cosmos DB (servers)
+Page: /servers
 
-Laufzeitfunktion:
+Persistenz: Cosmos (servers)
 
-„Get tools“
-
-POST an Python-Backend (/get_tools)
+Laufzeitfunktion: Get tools (Python-Backend)
 
 UI:
 
@@ -188,169 +184,101 @@ ServersList
 ServerToolsList
 
 Status:
-✔ voll funktionsfähig
 
-4.3 Tools
-Herkunft
+✔ vollständig funktionsfähig
 
-Tools kommen dynamisch von MCP-Servern
+5.3 Tools
+Runtime-Tools (ServerTool)
 
-Format: MCP / OpenAI Tool-Format (type: "function")
+Herkunft: MCP-Server
 
-Trennung der Tool-Ebenen
-Ebene Zweck Persistenz
-ServerTool rohe Runtime-Tools vom MCP ❌
-ToolSchema registriertes Tool für Agents ✅
-Agent-Tool-Zuweisung Tools pro Agent ❌ (nächster Schritt) 5. Tool-Datenmodelle (Frontend)
-5.1 ServerTool (Runtime)
-
-Datei: models/mcpServerTool.ts
-
-roh, backendnah
-
-normalizeTool, validateTool
+Datenmodell: models/mcpServerTool.ts
 
 nicht persistiert
 
-5.2 ToolSchema (persistiert)
+Persistierte Tools (ToolSchema)
 
-Datei: models/toolSchema.ts
+Page: /tools
 
-Frontend-Spiegel des Python-Backends.
+Persistenz: Cosmos (toolschemas)
 
-Struktur:
-
-server_url
-
-name_on_server
-
-name_for_llm
-
-description_for_llm
-
-args_schema
-
-ToolArgsSchema
-
-type: "object"
-
-properties: ToolArg[] (explizite Liste)
-
-additionalProperties: false
-
-ToolArg
-
-name_on_server
-
-name_for_llm
-
-description_for_llm
-
-type
-
-required
-
-default
-
-6. Tool-Registrierung (Create)
-
-Komponente: ToolRegisterModal
-
-Ort: features/tools/ToolRegisterModal.tsx
-
-Verwendung:
-
-auf der Server-Page („Register Tool“)
-
-Zweck:
-
-Transformation von ServerTool → ToolSchema
+Datenmodell: models/toolSchema.ts
 
 UI:
 
-Server-Face vs. LLM-Face
+ToolRegisterModal
+
+ToolSchemasList
+
+Status:
+
+✔ Registrierung
+
+✔ Anzeige
+
+❌ Edit / Update
+
+6. Tool-Registrierung
+
+Ort: features/tools/ToolRegisterModal.tsx
+
+Zweck: Transformation
+ServerTool → ToolSchema
 
 explizite Pflege von:
 
-Tool-Namen
+Namen (Server ↔ LLM)
 
-Parameter-Namen
+Argumenten
 
 Beschreibungen
 
 Typen
 
-Defaults
+Persistenz: saveToolSchema
 
-Persistenz:
+7. Edit-Thematik (aktueller Stand)
 
-saveToolSchema
+Create-Modals bleiben unverändert
 
-Container: toolschemas
+Edit wird als separates Modal gebaut (kein Wiederverwenden von Create)
 
-Status:
-✔ funktional
+Motivation:
 
-7. Tools-Übersicht (persistierte Tools)
+sauberes State-Management
 
-Page: /tools
+keine Vermischung von Create/Edit-Flows
 
-lädt alle ToolSchema aus Cosmos
+klare Übergabe von StoredItem<T>
 
-keine Create-Funktion (bewusst)
+8. Mentales Arbeitsmodell (bindend)
 
-UI: ToolSchemasList
+schrittweise
 
-Anzeige:
-
-Tool (LLM) ↔ Tool (Server)
-
-Server-URL
-
-vollständige Argumentliste
-
-Pflicht / optional
-
-Beschreibungen
-
-8. Aktueller Stand „Edit“
-
-ToolSchemasList besitzt Edit-Button
-
-Klick liefert aktuell nur das Tool
-
-kein Update / Upsert implementiert
-
-bewusster Stop-Point
-
-9. Mentales Arbeitsmodell („geführtes Programmieren“)
-
-Weiterhin bindend:
+minimal-invasiv
 
 keine impliziten Feature-Sprünge
 
-Änderungen:
-
-minimal
-
-schichtenspezifisch
-
-nachvollziehbar
-
 Reihenfolge:
 
-saubere Datenmodelle
+saubere Datenflüsse
 
-klare UI-Darstellung
+klare UI-Wiring
 
-erst danach neue Konzepte (Edit, Zuweisungen)
+Persistenz-Anpassungen
 
-10. Nächste logisch mögliche Mini-Schritte (geplant)
+erst danach neue Features
 
-ToolSchemas in Agents-Page anzeigen
+9. Nächste logisch geplante Mini-Schritte
 
-Drag & Drop: ToolSchema → Agent
+Separates AgentEditModal
 
-Persistente Tool-Zuweisung am Agent
+Update/Upsert-API für Cosmos (Edit ≠ Create)
 
-Erweiterung der Agent-Card (zugewiesene Tools sichtbar)
+Edit-Flow für ToolSchemas
+
+Tool-Zuweisung zu Agents
+
+Anzeige zugewiesener Tools auf Agent-Cards
+
+Wenn du willst, kann ich dir beim nächsten Chat direkt mit Punkt 1 (AgentEditModal sauber einbauen) wieder einsteigen – ohne Wiederholung.
