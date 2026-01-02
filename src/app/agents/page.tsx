@@ -8,6 +8,7 @@ import type { Agent } from "@/models/agent";
 import type { StoredItem } from "@/storage/storage";
 import { loadAgents, saveAgent } from "@/features/agents/agents.storage";
 import { Card } from "@/ui/Card";
+import { AgentsList } from "@/features/agents/AgentsList";
 
 export default function AgentsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -77,11 +78,7 @@ export default function AgentsPage() {
 
         {!isLoading && !loadError && agents.length > 0 && (
           <div className={styles.grid}>
-            {agents.map((agent) => (
-              <Card key={agent.id} title={agent.name}>
-                {agent.description}
-              </Card>
-            ))}
+            <AgentsList agents={agents} />
           </div>
         )}
       </div>

@@ -1,12 +1,12 @@
 1. Projektstruktur (Ist-Zustand)
-   Frontend (Next.js, App Router, TypeScript)
 
+Frontend: Next.js (App Router), TypeScript
 Root: src/
 
 src/
 ├─ app/
 │ ├─ agents/
-│ │ ├─ page.tsx
+│ │ ├─ page.tsx // AgentsPage
 │ │ └─ page.module.css
 │ │
 │ ├─ servers/
@@ -20,17 +20,18 @@ src/
 │ ├─ api/
 │ │ └─ storage/
 │ │ └─ [container]/
-│ │ └─ route.ts
+│ │ └─ route.ts // generische Persistenz-API
 │ │
 │ ├─ layout.tsx
-│ ├─ page.tsx
+│ ├─ page.tsx // Startseite
 │ ├─ page.module.css
-│ ├─ globals.css
+│ ├─ globals.css // globale Styles (inkl. scrollContainer)
 │ └─ favicon.ico
 │
 ├─ features/
 │ ├─ agents/
-│ │ ├─ AgentCreateModal.tsx
+│ │ ├─ AgentCreateModal.tsx // Create-Flow für Agents
+│ │ ├─ AgentsList.tsx // Card-Liste mit Agent-Metadaten
 │ │ └─ agents.storage.ts
 │ │
 │ ├─ servers/
@@ -40,22 +41,22 @@ src/
 │ │ ├─ ServersList.tsx
 │ │ └─ ServerToolsList.tsx
 │ │
-│ ├─ toolschemas/
+│ ├─ tools/
 │ │ ├─ ToolRegisterModal.tsx
 │ │ ├─ toolschemas.storage.ts
 │ │ └─ ToolSchemasList.tsx
 │
 ├─ models/
-│ ├─ agent.ts
+│ ├─ agent.ts // Agent inkl. Tool-Zuweisung
 │ ├─ mcpServer.ts
 │ ├─ mcpServerTool.ts
 │ └─ toolSchema.ts
 │
-├─ routing/
-│ └─ storage.ts
-│
 ├─ server/
-│ └─ cosmos.ts
+│ └─ cosmos.ts // Cosmos-DB-Anbindung (serverseitig)
+│
+├─ storage/
+│ └─ storage.ts // generischer Storage-Layer (Client)
 │
 └─ ui/
 ├─ AddButton.tsx
@@ -63,6 +64,7 @@ src/
 ├─ Card.tsx
 ├─ CheckBox.tsx
 ├─ Modal.tsx
+├─ ScrollContainer.tsx // einfacher Scroll-Wrapper (children)
 ├─ TextInput.tsx
 └─ TextArea.tsx
 
@@ -70,11 +72,20 @@ src/
    UI / Feature-Trennung
 
 ui/
+
 ausschließlich dumme, wiederverwendbare UI-Komponenten
-→ keine Fachlogik, kein State, keine Datenbeschaffung
+
+kein Fachwissen, kein Datenzugriff, kein Persistenzcode
+
+Beispiele: Card, Modal, ScrollContainer, Inputs
 
 features/\*
-fachliche Logik, Modals, Listen, Page-nahe Komponenten
+
+fachliche Logik
+
+Page-nahe Komponenten (Listen, Modals)
+
+Orchestrierung von UI + Storage
 
 Persistenz
 
@@ -82,19 +93,22 @@ ausschließlich über Next.js API Routes
 
 Cosmos DB Zugriff nur serverseitig
 
-generischer Storage-Layer: routing/storage.ts
+generischer Storage-Layer: storage/storage.ts
 
-Containername wird per URL bestimmt (/api/storage/[container])
+Containername wird über URL bestimmt
+(/api/storage/[container])
 
 MCP-Kommunikation
 
 niemals über Next.js API
 
-ausschließlich über externes Python-FastAPI-Backend
+ausschließlich über externes Python FastAPI Backend
 
 Frontend ruft MCP-Backend direkt auf
 
-MCP-Daten sind Runtime-Daten, nicht automatisch persistiert
+MCP-Daten sind Runtime-Daten
+
+keine automatische Persistenz von MCP-Ergebnissen
 
 3. Projektzweck & Ziel (Kurzfassung)
 
@@ -109,17 +123,33 @@ registrierte Tools
 mit klarer Trennung zwischen:
 
 persistierten Konfigurationsdaten
-(Agents, Server, ToolSchemas)
+
+Agents
+
+MCP-Server
+
+ToolSchemas
 
 dynamischen Runtime-Daten
-(ServerTools vom MCP-Backend)
+
+ServerTools vom MCP-Backend
 
 4. Fachliche Domänen
    4.1 Agents
 
-Verwaltung über /agents
+Verwaltung: /agents
 
 Datenmodell: models/agent.ts
+
+Agent enthält:
+
+Metadaten (name, description)
+
+Prompt-Konfiguration
+
+Kontrollflags (directAnswersAllowed, onlyOneModelCall, maxToolcalls)
+
+Liste von ToolSchemas (Vorbereitung für Zuweisung)
 
 Persistenz: Cosmos DB (agents)
 
@@ -129,11 +159,17 @@ AgentsPage
 
 AgentCreateModal
 
-Status: voll funktionsfähig
+AgentsList (Card-basierte Übersicht)
+
+Status:
+✔ Create
+✔ List / Anzeige
+❌ Edit
+❌ Tool-Zuweisung (vorbereitet)
 
 4.2 MCP-Server
 
-Verwaltung über /servers
+Verwaltung: /servers
 
 Datenmodell: models/mcpServer.ts
 
@@ -151,9 +187,10 @@ ServersList
 
 ServerToolsList
 
-Status: voll funktionsfähig
+Status:
+✔ voll funktionsfähig
 
-4.3 Tools (aktueller Fokus)
+4.3 Tools
 Herkunft
 
 Tools kommen dynamisch von MCP-Servern
@@ -164,12 +201,12 @@ Trennung der Tool-Ebenen
 Ebene Zweck Persistenz
 ServerTool rohe Runtime-Tools vom MCP ❌
 ToolSchema registriertes Tool für Agents ✅
-Agent-Tool-Zuweisung (noch nicht implementiert) ❌ 5. Tool-Datenmodelle (Frontend)
+Agent-Tool-Zuweisung Tools pro Agent ❌ (nächster Schritt) 5. Tool-Datenmodelle (Frontend)
 5.1 ServerTool (Runtime)
 
 Datei: models/mcpServerTool.ts
 
-Rohformat nah am Backend
+roh, backendnah
 
 normalizeTool, validateTool
 
@@ -179,43 +216,55 @@ nicht persistiert
 
 Datei: models/toolSchema.ts
 
-Frontend-Spiegel des Python-Backends
+Frontend-Spiegel des Python-Backends.
 
-ToolSchema
+Struktur:
 
 server_url
+
 name_on_server
+
 name_for_llm
+
 description_for_llm
+
 args_schema
 
 ToolArgsSchema
 
 type: "object"
-properties: ToolArg[] // explizit Liste
+
+properties: ToolArg[] (explizite Liste)
+
 additionalProperties: false
 
 ToolArg
 
 name_on_server
+
 name_for_llm
+
 description_for_llm
+
 type
+
 required
-default (string | EmptyDefault | null)
+
+default
 
 6. Tool-Registrierung (Create)
-   ToolRegisterModal
 
-Ort: features/toolschemas/ToolRegisterModal.tsx
+Komponente: ToolRegisterModal
+
+Ort: features/tools/ToolRegisterModal.tsx
 
 Verwendung:
 
-auf der Servers-Page („Register Tool“)
+auf der Server-Page („Register Tool“)
 
 Zweck:
 
-aus ServerTool → ToolSchema
+Transformation von ServerTool → ToolSchema
 
 UI:
 
@@ -223,11 +272,15 @@ Server-Face vs. LLM-Face
 
 explizite Pflege von:
 
-Tool-Namen (LLM)
+Tool-Namen
 
-Parameter-Namen (LLM)
+Parameter-Namen
 
-Parameter-Beschreibung / Typ / Default
+Beschreibungen
+
+Typen
+
+Defaults
 
 Persistenz:
 
@@ -235,20 +288,18 @@ saveToolSchema
 
 Container: toolschemas
 
-Status: funktional
+Status:
+✔ funktional
 
 7. Tools-Übersicht (persistierte Tools)
-   ToolsPage (/tools)
 
-lädt alle ToolSchemas aus Cosmos
+Page: /tools
+
+lädt alle ToolSchema aus Cosmos
 
 keine Create-Funktion (bewusst)
 
-UI:
-
-ToolSchemasList
-
-Card-basierte Darstellung
+UI: ToolSchemasList
 
 Anzeige:
 
@@ -256,31 +307,25 @@ Tool (LLM) ↔ Tool (Server)
 
 Server-URL
 
-vollständige Args-Liste
+vollständige Argumentliste
 
-name_for_llm
+Pflicht / optional
 
-name_on_server
-
-type
-
-required / optional
-
-description_for_llm
+Beschreibungen
 
 8. Aktueller Stand „Edit“
 
 ToolSchemasList besitzt Edit-Button
 
-Klick liefert aktuell nur das Tool (kein Modal)
+Klick liefert aktuell nur das Tool
 
 kein Update / Upsert implementiert
 
-bewusster Stop-Point erreicht
+bewusster Stop-Point
 
 9. Mentales Arbeitsmodell („geführtes Programmieren“)
 
-Für zukünftige Schritte gilt weiterhin:
+Weiterhin bindend:
 
 keine impliziten Feature-Sprünge
 
@@ -294,14 +339,18 @@ nachvollziehbar
 
 Reihenfolge:
 
-saubere Modelle
+saubere Datenmodelle
 
 klare UI-Darstellung
 
-erst dann neue Konzepte (z. B. Edit-Modus, Zuweisungen)
+erst danach neue Konzepte (Edit, Zuweisungen)
 
-10. Nächste logisch mögliche Mini-Schritte (nicht umgesetzt)
+10. Nächste logisch mögliche Mini-Schritte (geplant)
 
-Tool → Agent-Zuweisung
+ToolSchemas in Agents-Page anzeigen
 
-Agent-Schema (Datenmodell) dafür noch erweitern
+Drag & Drop: ToolSchema → Agent
+
+Persistente Tool-Zuweisung am Agent
+
+Erweiterung der Agent-Card (zugewiesene Tools sichtbar)

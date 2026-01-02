@@ -226,3 +226,9 @@ a {
   overflow-y: auto;
   padding-right: 6px; /* Platz für Scrollbar */
 }
+
+.scrollContainer {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
