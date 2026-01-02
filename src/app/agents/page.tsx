@@ -3,7 +3,7 @@
 import styles from "./page.module.css";
 import { useState, useEffect } from "react";
 import { AddButton } from "@/ui/AddButton";
-import { AgentCreateModal } from "@/features/agents/AgentCreateModal";
+import { AgentCreateOrEditModal } from "@/features/agents/AgentCreateOrEditModal";
 import type { Agent } from "@/models/agent";
 import type { StoredItem } from "@/storage/storage";
 import {
@@ -12,17 +12,13 @@ import {
   updateAgent,
 } from "@/features/agents/agents.storage";
 import { AgentsList } from "@/features/agents/AgentsList";
-import { AgentEditModal } from "@/features/agents/AgentEditModal";
 
 export default function AgentsPage() {
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [agents, setAgents] = useState<Array<StoredItem<Agent>>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<StoredItem<Agent> | null>(
-    null
-  );
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAgent, setModalAgent] = useState<StoredItem<Agent> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,60 +44,44 @@ export default function AgentsPage() {
   }, []);
 
   const handleAddAgent = () => {
-    setIsCreateOpen(true);
-  };
-
-  const handleClose = () => {
-    setIsCreateOpen(false);
-  };
-
-  const handleSave = async (agent: Agent) => {
-    try {
-      // save agent
-      const stored = await saveAgent(agent);
-      console.log("Agent saved:", stored);
-      setIsCreateOpen(false);
-      // update list
-      const items = await loadAgents();
-      setAgents(items);
-    } catch (error) {
-      console.error("Failed to save agent:", error);
-      // später: Toast / Error-State
-    }
+    setModalAgent(null);
+    setIsModalOpen(true);
   };
 
   const handleOpenEdit = (agent: StoredItem<Agent>) => {
-    setSelectedAgent(agent);
-    setIsEditOpen(true);
+    setModalAgent(agent);
+    setIsModalOpen(true);
   };
 
-  const handleCloseEdit = () => {
-    setIsEditOpen(false);
-    setSelectedAgent(null);
-  };
-
-  const handleSaveEdit = async (agentId: string, patch: Agent) => {
-    if (!selectedAgent) return;
-
+  const handleSubmitCreateOrEdit = async (agent: Agent) => {
     try {
-      const merged = {
-        ...selectedAgent,
-        ...patch,
-        id: selectedAgent.id,
-        partitionKey: selectedAgent.partitionKey,
-        container: selectedAgent.container,
-      };
+      if (modalAgent === null) {
+        await saveAgent(agent);
+      } else {
+        const merged: StoredItem<Agent> = {
+          ...modalAgent,
+          ...agent,
+          id: modalAgent.id,
+          partitionKey: modalAgent.partitionKey,
+          container: modalAgent.container,
+        };
 
-      await updateAgent(merged);
+        await updateAgent(merged);
+      }
 
-      setIsEditOpen(false);
-      setSelectedAgent(null);
+      setIsModalOpen(false);
+      setModalAgent(null);
 
       const items = await loadAgents();
       setAgents(items);
     } catch (e) {
-      console.error("Failed to update agent:", e);
+      console.error("Failed to create agent:", e);
     }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setModalAgent(null);
   };
 
   return (
@@ -119,19 +99,13 @@ export default function AgentsPage() {
         />
       </div>
 
-      <AgentCreateModal
-        isOpen={isCreateOpen}
-        onClose={handleClose}
-        onSave={handleSave}
-      />
-
-      {isEditOpen && selectedAgent && (
-        <AgentEditModal
-          key={selectedAgent.id}
+      {isModalOpen && (
+        <AgentCreateOrEditModal
+          key={modalAgent?.id ?? "create"}
           isOpen={true}
-          agent={selectedAgent}
-          onClose={handleCloseEdit}
-          onSave={handleSaveEdit}
+          initialAgent={modalAgent}
+          onClose={handleCloseModal}
+          onSubmit={handleSubmitCreateOrEdit}
         />
       )}
     </div>

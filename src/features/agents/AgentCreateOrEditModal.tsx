@@ -6,42 +6,69 @@ import { TextInput } from "@/ui/TextInput";
 import { TextArea } from "@/ui/TextArea";
 import { ScrollContainer } from "@/ui/ScrollContainer";
 import { Button } from "@/ui/Button";
-import { Agent } from "@/models/agent";
-import { normalizeAgent, validateAgent } from "@/models/agent";
 import { Checkbox } from "@/ui/CheckBox";
+import type { Agent } from "@/models/agent";
+import { normalizeAgent, validateAgent } from "@/models/agent";
+import type { StoredItem } from "@/storage/storage";
 
-type AgentCreateModalProps = {
+type AgentCreateOrEditModalProps = {
   isOpen: boolean;
+  initialAgent?: StoredItem<Agent> | null;
   onClose: () => void;
-  onSave: (agent: Agent) => void;
+  onSubmit: (agent: Agent) => void;
 };
 
-export function AgentCreateModal({
+export function AgentCreateOrEditModal({
   isOpen,
+  initialAgent = null,
   onClose,
-  onSave,
-}: AgentCreateModalProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [systemPrompt, setSystemPrompt] = useState("");
-  const [directAnswerValidationPrompt, setDirectAnswerValidationPrompt] =
-    useState("");
-  const [directAnswersAllowed, setDirectAnswersAllowed] =
-    useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [directAnswerPrompt, setDirectAnswerPrompt] = useState("");
-  const [toolbasedAnswerPrompt, setToolbasedAnswerPrompt] = useState("");
-  const [maxToolcalls, setMaxToolcalls] = useState<string>(""); // als string fürs Input
-  const [onlyOneModelCall, setOnlyOneModelCall] = useState<boolean>(false);
+  onSubmit,
+}: AgentCreateOrEditModalProps) {
+  const isEdit = Boolean(initialAgent);
 
-  const canSave = useMemo(
-    () =>
-      name.trim().length > 0 &&
-      systemPrompt.trim().length > 0 &&
-      description.trim().length > 0 &&
-      directAnswerValidationPrompt.trim().length > 0,
-    [name, systemPrompt, description, directAnswerValidationPrompt]
+  // initialize state from initialAgent (edit) or defaults (create)
+  const [name, setName] = useState(initialAgent?.name ?? "");
+  const [description, setDescription] = useState(
+    initialAgent?.description ?? ""
   );
+  const [systemPrompt, setSystemPrompt] = useState(
+    initialAgent?.systemPrompt ?? ""
+  );
+  const [directAnswerValidationPrompt, setDirectAnswerValidationPrompt] =
+    useState(initialAgent?.directAnswerValidationPrompt ?? "");
+
+  const [directAnswersAllowed, setDirectAnswersAllowed] = useState<boolean>(
+    initialAgent?.directAnswersAllowed ?? true
+  );
+
+  const [directAnswerPrompt, setDirectAnswerPrompt] = useState(
+    initialAgent?.directAnswerPrompt ?? ""
+  );
+
+  const [toolbasedAnswerPrompt, setToolbasedAnswerPrompt] = useState(
+    initialAgent?.toolbasedAnswerPrompt ?? ""
+  );
+
+  const [maxToolcalls, setMaxToolcalls] = useState<string>(
+    initialAgent?.maxToolcalls !== undefined
+      ? String(initialAgent.maxToolcalls)
+      : ""
+  );
+
+  const [onlyOneModelCall, setOnlyOneModelCall] = useState<boolean>(
+    initialAgent?.onlyOneModelCall ?? false
+  );
+
+  const [error, setError] = useState<string | null>(null);
+
+  const canSave = useMemo(() => {
+    return (
+      name.trim().length > 0 &&
+      description.trim().length > 0 &&
+      systemPrompt.trim().length > 0 &&
+      directAnswerValidationPrompt.trim().length > 0
+    );
+  }, [name, description, systemPrompt, directAnswerValidationPrompt]);
 
   const resetForm = () => {
     setName("");
@@ -49,11 +76,11 @@ export function AgentCreateModal({
     setSystemPrompt("");
     setDirectAnswerValidationPrompt("");
     setDirectAnswersAllowed(true);
-    setError(null);
     setDirectAnswerPrompt("");
     setToolbasedAnswerPrompt("");
     setMaxToolcalls("");
     setOnlyOneModelCall(false);
+    setError(null);
   };
 
   const handleSave = () => {
@@ -80,9 +107,10 @@ export function AgentCreateModal({
       const normalized = normalizeAgent(agent);
       validateAgent(normalized);
 
-      resetForm();
+      if (!isEdit) resetForm();
       setError(null);
-      onSave(normalized);
+
+      onSubmit(normalized);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Invalid input.");
     }
@@ -94,7 +122,11 @@ export function AgentCreateModal({
   };
 
   return (
-    <Modal isOpen={isOpen} title="Create Agent" onClose={handleClose}>
+    <Modal
+      isOpen={isOpen}
+      title={isEdit ? "Edit Agent" : "Create Agent"}
+      onClose={handleClose}
+    >
       <TextInput
         label="Name"
         value={name}
