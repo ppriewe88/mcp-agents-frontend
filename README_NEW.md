@@ -1,112 +1,152 @@
-1. Projektstruktur (Ist-Zustand, aktuell)
+1. Projektüberblick
 
-Frontend: Next.js (App Router), TypeScript
+Das Projekt ist ein webbasiertes Verwaltungssystem zur Konfiguration und Verwaltung von:
+
+Agents
+
+MCP-Servern
+
+persistierten Tools (ToolSchemas)
+
+Es dient als Administrations- und Konfigurationsoberfläche für ein agentenbasiertes LLM-/MCP-System.
+Der Fokus liegt auf klaren Datenflüssen, sauberer Schichtung und minimal-invasiver Erweiterbarkeit.
+
+2. Projektstruktur (Ist-Zustand)
+
+Technologie
+
+Frontend: Next.js (App Router)
+
+Sprache: TypeScript
+
+Persistenz: Azure Cosmos DB (serverseitig)
+
 Root: src/
 
 src/
 ├─ app/
-│ ├─ agents/
-│ │ ├─ page.tsx // AgentsPage (Create + Edit Flow)
-│ │ └─ page.module.css
-│ │
-│ ├─ servers/
-│ │ ├─ page.tsx
-│ │ └─ page.module.css
-│ │
-│ ├─ tools/
-│ │ ├─ page.tsx
-│ │ └─ page.module.css
-│ │
+│ ├─ agents/ // Agents-Verwaltung (Create + Edit)
+│ ├─ servers/ // MCP-Server-Verwaltung
+│ ├─ tools/ // ToolSchemas-Verwaltung (Create + Edit)
 │ ├─ api/
-│ │ └─ storage/
-│ │ └─ [container]/
-│ │ └─ route.ts // generische Cosmos-API (GET, POST, PUT)
-│ │
+│ │ └─ storage/[container]/route.ts // generische Cosmos-API
 │ ├─ layout.tsx
-│ ├─ page.tsx // Startseite
-│ ├─ page.module.css
-│ ├─ globals.css
-│ └─ favicon.ico
+│ └─ page.tsx // Startseite
 │
 ├─ features/
-│ ├─ agents/
-│ │ ├─ AgentCreateModal.tsx
-│ │ ├─ AgentEditModal.tsx // separates Edit-Modal (neu)
-│ │ ├─ AgentsList.tsx
-│ │ └─ agents.storage.ts // saveAgent, loadAgents, updateAgent
-│ │
-│ ├─ servers/
-│ │ ├─ ServerCreateModal.tsx
-│ │ ├─ servers.storage.ts
-│ │ ├─ servers.getTools.ts
-│ │ ├─ ServersList.tsx
-│ │ └─ ServerToolsList.tsx
-│ │
-│ ├─ tools/
-│ │ ├─ ToolRegisterModal.tsx
-│ │ ├─ toolschemas.storage.ts
-│ │ └─ ToolSchemasList.tsx
+│ ├─ agents/ // Agent-spezifische UI + Storage-Wrapper
+│ ├─ servers/ // Server-spezifische UI + Storage + Runtime-Tools
+│ └─ tools/ // ToolSchema UI + Storage
 │
-├─ models/
-│ ├─ agent.ts
-│ ├─ mcpServer.ts
-│ ├─ mcpServerTool.ts
-│ └─ toolSchema.ts
+├─ models/ // Reine Datenmodelle (ohne UI / Persistenz)
 │
 ├─ storage/
-│ ├─ cosmos.ts // serverseitige Cosmos-Client-Config
-│ └─ storage.ts // generischer Client-Storage (GET, POST, PUT)
+│ ├─ cosmos.ts // Serverseitige Cosmos-Client-Konfiguration
+│ └─ storage.ts // Generischer Client-Storage (GET/POST/PUT)
 │
-└─ ui/
-├─ AddButton.tsx
-├─ Button.tsx
-├─ Card.tsx
-├─ CheckBox.tsx
-├─ Modal.tsx
-├─ ScrollContainer.tsx
-├─ TextInput.tsx
-└─ TextArea.tsx
+└─ ui/ // Reine, wiederverwendbare UI-Komponenten
 
-2. Architekturprinzipien (bindend)
-   2.1 UI / Feature-Trennung
+3. Architekturprinzipien (bindend)
+   3.1 UI / Feature-Trennung
 
 ui/
 
-rein visuelle, wiederverwendbare Komponenten
+ausschließlich visuelle, wiederverwendbare Komponenten
 
-kein Fachwissen, keine Persistenz
+keine Fachlogik
 
-z. B. Card, Modal, Button
+keine Persistenz
+
+Beispiele: Card, Modal, Button, TextInput
 
 features/\*
 
-fachliche Logik
+fachliche Logik je Domäne
 
 Page-nahe Komponenten (Listen, Modals)
 
 orchestrieren UI + Storage
 
-jede Domäne kapselt ihre Storage-Wrapper
+jede Domäne kapselt ihre Storage-Wrapper selbst
 
-2.2 Persistenz
+app/\*/page.tsx
 
-ausschließlich über Next.js API Routes
+Orchestrierungsebene
 
-Cosmos-Zugriff nur serverseitig
+hält State (selectedItem, isEditOpen, Listen)
 
-generische Route:
+entscheidet über Create / Edit / Save / Refresh
+
+4. Persistenzarchitektur (Cosmos DB)
+   4.1 Grundprinzip
+
+Cosmos-Zugriff ausschließlich serverseitig
+
+Client kommuniziert nur über Next.js API Routes
+
+eine generische API-Route für alle Container
 
 /api/storage/[container]
 
-generischer Client-Layer:
+4.2 API-Operationen (serverseitig)
+HTTP Zweck Cosmos-Operation
+GET Laden aller Items container.items.query(...)
+POST Create container.items.create(...)
+PUT Update / Upsert container.items.upsert(...)
 
-storage/storage.ts
+Wichtig
 
-Wichtig:
-Der container-Name wird serverseitig ins Dokument geschrieben.
-Jedes StoredItem<T> kennt seine Herkunft (container, partitionKey, id).
+container und partitionKey werden serverseitig gesetzt
 
-3. Card-Konzept (bindend)
+Client darf diese nicht manipulieren
+
+4.3 Client-Storage (storage/storage.ts)
+
+Generischer, domänenunabhängiger Zugriff:
+
+saveItemToContainer(container, item) → POST
+
+loadItems(container) → GET
+
+updateItemInContainer(container, storedItem) → PUT
+
+Zentraler Typ
+
+type StoredItem<T> = T & {
+id: string;
+partitionKey: string;
+container: string;
+};
+
+➡ Jedes Objekt „weiß“, woher es kommt (Container, Partition, ID).
+
+4.4 Feature-spezifische Storage-Wrapper
+
+Jede Domäne kapselt den generischen Storage:
+
+agents.storage.ts
+
+saveAgent
+
+loadAgents
+
+updateAgent
+
+toolschemas.storage.ts
+
+saveToolSchema
+
+loadToolSchemas
+
+updateToolSchema
+
+servers.storage.ts
+
+analog
+
+➡ Pages arbeiten nur mit Feature-Wrappern, nie direkt mit storage.ts.
+
+5. Card-Konzept (bindend)
    type CardProps = {
    title: string;
    dataId: string;
@@ -119,85 +159,67 @@ dataContainer dient nur Debugging / DOM-Lesbarkeit
 
 keine Business-Logik liest aus dem DOM
 
-Logik arbeitet immer mit vollständigen Items im State:
+Aktionen arbeiten immer mit vollständigen Items im State
 
 onOpen(item)
 
-Runtime-Daten (z. B. ServerTools):
+Runtime-Daten
+
+z. B. ServerTools
 
 dataContainer = "runtime"
 
-4. Projektzweck & Ziel
+niemals persistiert
 
-Webbasiertes Verwaltungssystem für:
-
-Agents
-
-MCP-Server
-
-persistierte Tools (ToolSchemas)
-
-Klare Trennung:
-
-Kategorie Beispiele Persistenz
-Konfiguration Agents, MCP-Server, ToolSchemas ✅ Cosmos
-Runtime-Daten ServerTools vom MCP ❌ 5. Fachliche Domänen
-5.1 Agents
+6. Fachliche Domänen
+   6.1 Agents
 
 Page: /agents
-Datenmodell: models/agent.ts
+
 Persistenz: Cosmos (agents)
 
-Agent enthält:
+Modell: models/agent.ts
 
-Metadaten (name, description)
+Funktionalität
 
-Prompt-Konfiguration
+Create ✔
 
-Kontrollflags (directAnswersAllowed, onlyOneModelCall, maxToolcalls)
+List ✔
 
-vorbereitete Tool-Referenzen (toolSchemas)
+Edit ✔ (separates Edit-Modal, PUT-Flow)
 
-UI-Komponenten:
+Tool-Zuweisung ❌ (geplant)
 
-AgentsPage
+Edit-Flow
 
-AgentsList (Card-basiert, klickbar)
+Card-Klick → StoredItem<Agent> in State
 
-AgentCreateModal
+AgentEditModal wird nur gemountet, wenn Agent existiert
 
-AgentEditModal
+Save:
 
-Status:
+Patch → Merge → updateAgent → Refresh
 
-✔ Create
-
-✔ List / Anzeige
-
-✔ Edit (separates Edit-Modal, PUT-Flow vollständig)
-
-❌ Tool-Zuweisung
-
-5.2 MCP-Server
+6.2 MCP-Server
 
 Page: /servers
+
 Persistenz: Cosmos (servers)
-Runtime-Funktion: Tool-Abfrage (Python-Backend)
 
-UI-Komponenten:
+Runtime: Tool-Abfrage aus MCP-Backend
 
-ServersList
+Besonderheit
 
-ServerToolsList
+Mischung aus:
 
-ServerCreateModal
+persistierter Server-Konfiguration
 
-Status:
+nicht persistierten Runtime-Tools
 
-✔ vollständig funktionsfähig
+Status: vollständig funktionsfähig
 
-5.3 Tools
-Runtime-Tools (ServerTool)
+6.3 Tools
+6.3.1 Runtime-Tools (ServerTool)
 
 Herkunft: MCP-Server
 
@@ -205,71 +227,102 @@ Modell: models/mcpServerTool.ts
 
 nicht persistiert
 
-Persistierte Tools (ToolSchema)
+6.3.2 Persistierte Tools (ToolSchema)
 
 Page: /tools
+
 Persistenz: Cosmos (toolschemas)
+
 Modell: models/toolSchema.ts
 
-UI-Komponenten:
+Funktionalität
 
-ToolRegisterModal
+Registrierung (Create) ✔
 
-ToolSchemasList
+Anzeige ✔
 
-Status:
+Edit ✔ (neu, analog Agents)
 
-✔ Registrierung
-
-✔ Anzeige
-
-❌ Edit / Update (nächster Schritt)
-
-6. Tool-Registrierung
+7. Tool-Registrierung
 
 Ort: features/tools/ToolRegisterModal.tsx
 
-Zweck:
-Transformation von ServerTool → ToolSchema
+Zweck
 
-Explizite Pflege von:
+Transformation:
+
+ServerTool → ToolSchema
+
+Explizit gepflegt
 
 Namen (Server ↔ LLM)
 
-Argumenten
-
-Beschreibungen
+Argumente
 
 Typen
 
-Persistenz über:
+Beschreibungen
 
-saveToolSchema(...)
+Defaults
 
-7. Edit-Konzept (erprobt mit Agents)
+Persistenz
 
-Create-Modals bleiben unverändert
+saveToolSchema(...) → POST → Cosmos
 
-Edit ist ein separates Modal
+8. Edit-Konzept (bindend, bewährt)
 
-kein Wiederverwenden von Create im ersten Schritt
+Create-Modals bleiben unangetastet
 
-klare Übergabe von StoredItem<T>
+Edit ist immer ein separates Modal
 
-Edit-Modal wird nur gemountet, wenn ein Item existiert
-→ initiale useState(...) greift zuverlässig
+kein Vermischen von Create/Edit
 
-Persistenz:
+Edit-Modal:
 
-API: PUT /api/storage/[container]
+bekommt vollständiges StoredItem<T>
 
-Client: updateItemInContainer
+wird nur gemountet, wenn Item existiert
 
-Feature: updateXxx(storedItem)
+useState(initial) greift zuverlässig
 
-Dieses Muster ist direkt auf ToolSchemas übertragbar.
+Save:
 
-8. Mentales Arbeitsmodell (bindend)
+Patch im Modal
+
+Merge + PUT auf Page-Ebene
+
+Refresh der Liste
+
+Dieses Muster ist 1:1 wiederverwendbar für alle Domänen.
+
+9. Datenflüsse (Lesen / Schreiben / Ändern)
+   Lesen
+   Page
+   → Feature-Storage (loadXxx)
+   → Client-Storage (GET)
+   → API /api/storage/[container]
+   → Cosmos
+
+Create
+Modal
+→ Feature-Storage (saveXxx)
+→ Client-Storage (POST)
+→ API
+→ Cosmos.create
+
+Edit
+Card-Klick
+→ Page-State (selectedItem)
+→ Edit-Modal
+→ Patch
+→ Page: Merge
+→ Feature-Storage (updateXxx)
+→ Client-Storage (PUT)
+→ API
+→ Cosmos.upsert
+→ Refresh
+
+10. Mentales Arbeitsmodell (bindend)
 
 schrittweise
 
@@ -277,7 +330,7 @@ minimal-invasiv
 
 keine impliziten Feature-Sprünge
 
-Reihenfolge:
+Reihenfolge
 
 saubere Datenflüsse
 
@@ -287,18 +340,16 @@ Persistenz-Anpassungen
 
 erst danach neue Features
 
-9. Nächste logisch geplante Schritte
+11. Nächste logische Schritte
 
-Edit-Flow für ToolSchemas
-
-Edit-Modal (Kopie oder Reuse von ToolRegisterModal)
-
-updateToolSchema im Storage
-
-Edit-Wiring auf /tools-Page
+Delete-Flow (DELETE Route + Wrapper + Page-Orchestrierung)
 
 Tool-Zuweisung zu Agents
 
 Anzeige zugewiesener Tools auf Agent-Cards
 
-Diese Zusammenfassung ist die Referenz, um den Edit-Flow jetzt 1:1 für ToolSchemas umzusetzen, mit minimalem Denkaufwand und maximaler Wiederverwendung der bereits etablierten Schichten.
+optionale UX-Verbesserungen (Confirmations, Optimistic Updates)
+
+Status:
+Das Projekt besitzt nun eine konsistente, skalierbare Verwaltungsarchitektur mit klarer Trennung von UI, Fachlogik und Persistenz.
+Neue Features (Edit, Delete, Zuweisungen) lassen sich mechanisch nach etablierten Mustern ergänzen, ohne Refactor-Zwang.
