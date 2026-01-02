@@ -9,9 +9,15 @@ type Props = {
   tools: Array<StoredItem<ToolSchema>>;
   isLoading: boolean;
   loadError: string | null;
+  onOpen: (tool: StoredItem<ToolSchema>) => void;
 };
 
-export function ToolSchemasList({ tools, isLoading, loadError }: Props) {
+export function ToolSchemasList({
+  tools,
+  isLoading,
+  loadError,
+  onOpen,
+}: Props) {
   if (isLoading) return <div>Loading...</div>;
   if (loadError) return <div className="formError">{loadError}</div>;
   if (tools.length === 0) return <div>No tools yet.</div>;
@@ -24,6 +30,7 @@ export function ToolSchemasList({ tools, isLoading, loadError }: Props) {
           title={tool.name_for_llm}
           dataId={tool.id}
           dataContainer={tool.container}
+          onClick={() => onOpen(tool)}
         >
           <div className={styles.metaRow}>
             <span className={styles.metaLabel}>Server:</span>

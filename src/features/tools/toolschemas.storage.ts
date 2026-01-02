@@ -2,6 +2,7 @@ import type { ToolSchema } from "@/models/toolSchema";
 import {
   saveItemToContainer,
   loadItems,
+  updateItemInContainer,
   type StoredItem,
 } from "@/storage/storage";
 
@@ -15,4 +16,10 @@ export function saveToolSchema(
 
 export function loadToolSchemas(): Promise<Array<StoredItem<ToolSchema>>> {
   return loadItems<ToolSchema>(CONTAINER);
+}
+
+export function updateToolSchema(
+  schema: StoredItem<ToolSchema>
+): Promise<StoredItem<ToolSchema>> {
+  return updateItemInContainer(CONTAINER, schema);
 }
