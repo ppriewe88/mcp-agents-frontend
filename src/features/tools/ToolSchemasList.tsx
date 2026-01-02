@@ -19,7 +19,7 @@ export function ToolSchemasList({ tools, isLoading, loadError }: Props) {
   return (
     <div className={styles.grid}>
       {tools.map((t) => (
-        <Card key={t.id} title={t.name_for_llm}>
+        <Card key={t.id} title={t.name_for_llm} dataId={t.id}>
           <div className={styles.metaRow}>
             <span className={styles.metaLabel}>Server:</span>
             <span className={styles.metaValue}>{t.server_url}</span>
@@ -35,10 +35,13 @@ export function ToolSchemasList({ tools, isLoading, loadError }: Props) {
             <span className={styles.metaValue}>{t.name_on_server}</span>
           </div>
 
-          <div className={styles.metaRow}>
-            <span className={styles.metaLabel}>Tool (server):</span>
-            <span className={styles.metaValue}>{t.name_on_server}</span>
-          </div>
+          {t.description_for_llm?.trim() ? (
+            <div className={styles.metaRow}>
+              <span className={styles.metaLabel}>
+                Description: {t.description_for_llm}
+              </span>
+            </div>
+          ) : null}
 
           <div className={styles.metaRow}>
             <span className={styles.metaLabel}>Args:</span>
@@ -78,10 +81,6 @@ export function ToolSchemasList({ tools, isLoading, loadError }: Props) {
               ))}
             </ul>
           )}
-
-          {t.description_for_llm?.trim() ? (
-            <div className={styles.description}>{t.description_for_llm}</div>
-          ) : null}
         </Card>
       ))}
     </div>

@@ -28,7 +28,7 @@ export function ServersList({
   return (
     <div className={styles.grid}>
       {servers.map((server) => (
-        <Card key={server.id} title={server.name}>
+        <Card key={server.id} dataId={server.id} title={server.name}>
           <div>{server.url}</div>
 
           <div style={{ marginTop: 12 }}>

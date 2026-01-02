@@ -1,6 +1,7 @@
 export type StoredItem<T> = T & {
   id: string;
   partitionKey: string;
+  container: string;
 };
 
 export async function saveItemToContainer<TSchema>(

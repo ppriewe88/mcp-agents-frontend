@@ -4,7 +4,7 @@ import {
   cosmosClient,
   COSMOS_DATABASE_ID,
   COSMOS_PARTITION_KEY_VALUE,
-} from "@/server/cosmos";
+} from "@/storage/cosmos";
 
 type Params = { container: string };
 type Ctx = { params: Promise<Params> };

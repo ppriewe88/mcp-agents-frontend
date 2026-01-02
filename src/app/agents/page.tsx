@@ -7,7 +7,6 @@ import { AgentCreateModal } from "@/features/agents/AgentCreateModal";
 import type { Agent } from "@/models/agent";
 import type { StoredItem } from "@/storage/storage";
 import { loadAgents, saveAgent } from "@/features/agents/agents.storage";
-import { Card } from "@/ui/Card";
 import { AgentsList } from "@/features/agents/AgentsList";
 
 export default function AgentsPage() {
@@ -69,18 +68,11 @@ export default function AgentsPage() {
       </div>
 
       <div className={styles.listArea}>
-        {isLoading && <div>Loading...</div>}
-        {loadError && <div className="formError">{loadError}</div>}
-
-        {!isLoading && !loadError && agents.length === 0 && (
-          <div>No agents yet.</div>
-        )}
-
-        {!isLoading && !loadError && agents.length > 0 && (
-          <div className={styles.grid}>
-            <AgentsList agents={agents} />
-          </div>
-        )}
+        <AgentsList
+          agents={agents}
+          isLoading={isLoading}
+          loadError={loadError}
+        />
       </div>
 
       <AgentCreateModal
