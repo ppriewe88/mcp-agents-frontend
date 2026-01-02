@@ -17,6 +17,7 @@ export async function POST(req: Request, ctx: Ctx) {
   const item = {
     id: randomUUID(),
     partitionKey: COSMOS_PARTITION_KEY_VALUE,
+    container: containerId,
     ...body,
   };
 

@@ -24,7 +24,12 @@ export function ServerToolsList({
   return (
     <div className={styles.grid}>
       {tools.map((tool) => (
-        <Card key={tool.function.name} title={tool.function.name}>
+        <Card
+          key={tool.function.name}
+          dataContainer="__virtual__"
+          dataId="__virtual__"
+          title={tool.function.name}
+        >
           {serverUrl && (
             <div style={{ marginTop: 12 }}>
               <div style={{ fontWeight: 600, marginBottom: 6 }}>Server Url</div>

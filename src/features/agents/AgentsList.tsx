@@ -17,7 +17,12 @@ export function AgentsList({ agents, isLoading, loadError }: AgentsListProps) {
   return (
     <div className={styles.grid}>
       {agents.map((agent) => (
-        <Card key={agent.id} dataId={agent.id} title={agent.name}>
+        <Card
+          key={agent.id}
+          dataId={agent.id}
+          dataContainer={agent.container}
+          title={agent.name}
+        >
           <div>
             <strong>Description</strong>
             <div>{agent.description}</div>
