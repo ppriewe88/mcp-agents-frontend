@@ -11,7 +11,8 @@ import { listTools, parseTools } from "@/features/servers/servers.getTools";
 import type { ServerTool } from "@/models/mcpServerTool";
 import { ServersList } from "@/features/servers/ServersList";
 import { ServerToolsList } from "@/features/servers/ServerToolsList";
-import { ToolRegisterModal } from "@/features/tools/ToolRegisterModal";
+import { ToolSchemaCreateOrEditModal } from "@/features/tools/ToolSchemaCreateOrEditModal";
+import { saveToolSchema } from "@/features/tools/toolschemas.storage";
 
 export default function ServersPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -24,8 +25,8 @@ export default function ServersPage() {
     Record<string, boolean>
   >({});
   const [toolsServerUrl, setToolsServerUrl] = useState<string | null>(null);
-  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [selectedTool, setSelectedTool] = useState<ServerTool | null>(null);
+  const [isToolCreateOrEditOpen, setIsToolCreateOrEditOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -104,11 +105,11 @@ export default function ServersPage() {
 
   const handleRegisterTool = (tool: ServerTool) => {
     setSelectedTool(tool);
-    setIsRegisterOpen(true);
+    setIsToolCreateOrEditOpen(true);
   };
 
-  const handleCloseRegister = () => {
-    setIsRegisterOpen(false);
+  const handleCloseToolCreateOrEdit = () => {
+    setIsToolCreateOrEditOpen(false);
     setSelectedTool(null);
   };
 
@@ -146,15 +147,22 @@ export default function ServersPage() {
         onSave={handleSaveServer}
       />
 
-      <ToolRegisterModal
-        key={`${toolsServerUrl ?? "no-server"}::${
-          selectedTool?.function.name ?? "no-tool"
-        }`}
-        isOpen={isRegisterOpen}
-        onClose={handleCloseRegister}
-        tool={selectedTool}
-        serverUrl={toolsServerUrl}
-      />
+      {isToolCreateOrEditOpen && (
+        <ToolSchemaCreateOrEditModal
+          key={`${toolsServerUrl ?? "no-server"}::${
+            selectedTool?.function.name ?? "no-tool"
+          }`}
+          isOpen={isToolCreateOrEditOpen}
+          onClose={handleCloseToolCreateOrEdit}
+          initialToolSchema={null}
+          tool={selectedTool}
+          serverUrl={toolsServerUrl}
+          onSubmit={async (toolSchema) => {
+            await saveToolSchema(toolSchema);
+            handleCloseToolCreateOrEdit();
+          }}
+        />
+      )}
     </div>
   );
 }
