@@ -23,7 +23,6 @@ export function AgentEditModal({
   onClose,
   onSave,
 }: AgentEditModalProps) {
-  // Initialwerte direkt aus agent ziehen (MVP)
   const [name, setName] = useState(agent?.name ?? "");
   const [description, setDescription] = useState(agent?.description ?? "");
   const [systemPrompt, setSystemPrompt] = useState(agent?.systemPrompt ?? "");

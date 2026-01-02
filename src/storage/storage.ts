@@ -36,3 +36,21 @@ export async function loadItems<TSchema>(
 
   return (await res.json()) as Array<StoredItem<TSchema>>;
 }
+
+export async function updateItemInContainer<TSchema>(
+  container: string,
+  item: StoredItem<TSchema>
+): Promise<StoredItem<TSchema>> {
+  const res = await fetch(`/api/storage/${container}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(item),
+  });
+
+  if (!res.ok) {
+    const msg = await res.text().catch(() => "");
+    throw new Error(`Update failed (${res.status}): ${msg || res.statusText}`);
+  }
+
+  return (await res.json()) as StoredItem<TSchema>;
+}

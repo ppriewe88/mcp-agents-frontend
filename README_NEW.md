@@ -1,4 +1,4 @@
-1. Projektstruktur (Ist-Zustand)
+1. Projektstruktur (Ist-Zustand, aktuell)
 
 Frontend: Next.js (App Router), TypeScript
 Root: src/
@@ -6,7 +6,7 @@ Root: src/
 src/
 ├─ app/
 │ ├─ agents/
-│ │ ├─ page.tsx // AgentsPage
+│ │ ├─ page.tsx // AgentsPage (Create + Edit Flow)
 │ │ └─ page.module.css
 │ │
 │ ├─ servers/
@@ -20,7 +20,7 @@ src/
 │ ├─ api/
 │ │ └─ storage/
 │ │ └─ [container]/
-│ │ └─ route.ts // generische Cosmos-Persistenz-API
+│ │ └─ route.ts // generische Cosmos-API (GET, POST, PUT)
 │ │
 │ ├─ layout.tsx
 │ ├─ page.tsx // Startseite
@@ -30,9 +30,10 @@ src/
 │
 ├─ features/
 │ ├─ agents/
-│ │ ├─ AgentCreateModal.tsx // Create-Modal für Agents
-│ │ ├─ AgentsList.tsx // Card-Liste (clickable)
-│ │ └─ agents.storage.ts
+│ │ ├─ AgentCreateModal.tsx
+│ │ ├─ AgentEditModal.tsx // separates Edit-Modal (neu)
+│ │ ├─ AgentsList.tsx
+│ │ └─ agents.storage.ts // saveAgent, loadAgents, updateAgent
 │ │
 │ ├─ servers/
 │ │ ├─ ServerCreateModal.tsx
@@ -54,7 +55,7 @@ src/
 │
 ├─ storage/
 │ ├─ cosmos.ts // serverseitige Cosmos-Client-Config
-│ └─ storage.ts // generischer Client-Storage
+│ └─ storage.ts // generischer Client-Storage (GET, POST, PUT)
 │
 └─ ui/
 ├─ AddButton.tsx
@@ -85,6 +86,8 @@ Page-nahe Komponenten (Listen, Modals)
 
 orchestrieren UI + Storage
 
+jede Domäne kapselt ihre Storage-Wrapper
+
 2.2 Persistenz
 
 ausschließlich über Next.js API Routes
@@ -92,18 +95,22 @@ ausschließlich über Next.js API Routes
 Cosmos-Zugriff nur serverseitig
 
 generische Route:
+
 /api/storage/[container]
 
-generischer Client-Layer: storage/storage.ts
+generischer Client-Layer:
+
+storage/storage.ts
 
 Wichtig:
-Der Containername wird serverseitig ins Dokument geschrieben (container Feld), damit jedes geladene Item seine Herkunft kennt.
+Der container-Name wird serverseitig ins Dokument geschrieben.
+Jedes StoredItem<T> kennt seine Herkunft (container, partitionKey, id).
 
-3. Card-Konzept (aktueller Stand)
+3. Card-Konzept (bindend)
    type CardProps = {
    title: string;
    dataId: string;
-   dataContainer: string; // Herkunft (Cosmos oder "runtime")
+   dataContainer: string; // Cosmos oder "runtime"
    children?: ReactNode;
    onClick?: () => void;
    };
@@ -112,11 +119,13 @@ dataContainer dient nur Debugging / DOM-Lesbarkeit
 
 keine Business-Logik liest aus dem DOM
 
-Logik nutzt immer das komplette Item im State (onOpen(item))
+Logik arbeitet immer mit vollständigen Items im State:
 
-Für Runtime-Daten (z. B. ServerTools):
+onOpen(item)
 
-dataContainer="runtime"
+Runtime-Daten (z. B. ServerTools):
+
+dataContainer = "runtime"
 
 4. Projektzweck & Ziel
 
@@ -128,7 +137,7 @@ MCP-Server
 
 persistierte Tools (ToolSchemas)
 
-klare Trennung zwischen:
+Klare Trennung:
 
 Kategorie Beispiele Persistenz
 Konfiguration Agents, MCP-Server, ToolSchemas ✅ Cosmos
@@ -136,9 +145,7 @@ Runtime-Daten ServerTools vom MCP ❌ 5. Fachliche Domänen
 5.1 Agents
 
 Page: /agents
-
 Datenmodell: models/agent.ts
-
 Persistenz: Cosmos (agents)
 
 Agent enthält:
@@ -149,9 +156,9 @@ Prompt-Konfiguration
 
 Kontrollflags (directAnswersAllowed, onlyOneModelCall, maxToolcalls)
 
-vorbereitete Tool-Referenzen
+vorbereitete Tool-Referenzen (toolSchemas)
 
-UI:
+UI-Komponenten:
 
 AgentsPage
 
@@ -159,29 +166,31 @@ AgentsList (Card-basiert, klickbar)
 
 AgentCreateModal
 
+AgentEditModal
+
 Status:
 
 ✔ Create
 
 ✔ List / Anzeige
 
-⚠️ Edit: in Arbeit (separates Edit-Modal geplant)
+✔ Edit (separates Edit-Modal, PUT-Flow vollständig)
 
 ❌ Tool-Zuweisung
 
 5.2 MCP-Server
 
 Page: /servers
-
 Persistenz: Cosmos (servers)
+Runtime-Funktion: Tool-Abfrage (Python-Backend)
 
-Laufzeitfunktion: Get tools (Python-Backend)
-
-UI:
+UI-Komponenten:
 
 ServersList
 
 ServerToolsList
+
+ServerCreateModal
 
 Status:
 
@@ -192,19 +201,17 @@ Runtime-Tools (ServerTool)
 
 Herkunft: MCP-Server
 
-Datenmodell: models/mcpServerTool.ts
+Modell: models/mcpServerTool.ts
 
 nicht persistiert
 
 Persistierte Tools (ToolSchema)
 
 Page: /tools
-
 Persistenz: Cosmos (toolschemas)
+Modell: models/toolSchema.ts
 
-Datenmodell: models/toolSchema.ts
-
-UI:
+UI-Komponenten:
 
 ToolRegisterModal
 
@@ -216,16 +223,16 @@ Status:
 
 ✔ Anzeige
 
-❌ Edit / Update
+❌ Edit / Update (nächster Schritt)
 
 6. Tool-Registrierung
 
 Ort: features/tools/ToolRegisterModal.tsx
 
-Zweck: Transformation
-ServerTool → ToolSchema
+Zweck:
+Transformation von ServerTool → ToolSchema
 
-explizite Pflege von:
+Explizite Pflege von:
 
 Namen (Server ↔ LLM)
 
@@ -235,21 +242,32 @@ Beschreibungen
 
 Typen
 
-Persistenz: saveToolSchema
+Persistenz über:
 
-7. Edit-Thematik (aktueller Stand)
+saveToolSchema(...)
+
+7. Edit-Konzept (erprobt mit Agents)
 
 Create-Modals bleiben unverändert
 
-Edit wird als separates Modal gebaut (kein Wiederverwenden von Create)
+Edit ist ein separates Modal
 
-Motivation:
-
-sauberes State-Management
-
-keine Vermischung von Create/Edit-Flows
+kein Wiederverwenden von Create im ersten Schritt
 
 klare Übergabe von StoredItem<T>
+
+Edit-Modal wird nur gemountet, wenn ein Item existiert
+→ initiale useState(...) greift zuverlässig
+
+Persistenz:
+
+API: PUT /api/storage/[container]
+
+Client: updateItemInContainer
+
+Feature: updateXxx(storedItem)
+
+Dieses Muster ist direkt auf ToolSchemas übertragbar.
 
 8. Mentales Arbeitsmodell (bindend)
 
@@ -263,22 +281,24 @@ Reihenfolge:
 
 saubere Datenflüsse
 
-klare UI-Wiring
+klares UI-Wiring
 
 Persistenz-Anpassungen
 
 erst danach neue Features
 
-9. Nächste logisch geplante Mini-Schritte
-
-Separates AgentEditModal
-
-Update/Upsert-API für Cosmos (Edit ≠ Create)
+9. Nächste logisch geplante Schritte
 
 Edit-Flow für ToolSchemas
+
+Edit-Modal (Kopie oder Reuse von ToolRegisterModal)
+
+updateToolSchema im Storage
+
+Edit-Wiring auf /tools-Page
 
 Tool-Zuweisung zu Agents
 
 Anzeige zugewiesener Tools auf Agent-Cards
 
-Wenn du willst, kann ich dir beim nächsten Chat direkt mit Punkt 1 (AgentEditModal sauber einbauen) wieder einsteigen – ohne Wiederholung.
+Diese Zusammenfassung ist die Referenz, um den Edit-Flow jetzt 1:1 für ToolSchemas umzusetzen, mit minimalem Denkaufwand und maximaler Wiederverwendung der bereits etablierten Schichten.

@@ -6,14 +6,23 @@ import { AddButton } from "@/ui/AddButton";
 import { AgentCreateModal } from "@/features/agents/AgentCreateModal";
 import type { Agent } from "@/models/agent";
 import type { StoredItem } from "@/storage/storage";
-import { loadAgents, saveAgent } from "@/features/agents/agents.storage";
+import {
+  loadAgents,
+  saveAgent,
+  updateAgent,
+} from "@/features/agents/agents.storage";
 import { AgentsList } from "@/features/agents/AgentsList";
+import { AgentEditModal } from "@/features/agents/AgentEditModal";
 
 export default function AgentsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [agents, setAgents] = useState<Array<StoredItem<Agent>>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<StoredItem<Agent> | null>(
+    null
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -61,6 +70,40 @@ export default function AgentsPage() {
     }
   };
 
+  const handleOpenEdit = (agent: StoredItem<Agent>) => {
+    setSelectedAgent(agent);
+    setIsEditOpen(true);
+  };
+
+  const handleCloseEdit = () => {
+    setIsEditOpen(false);
+    setSelectedAgent(null);
+  };
+
+  const handleSaveEdit = async (agentId: string, patch: Agent) => {
+    if (!selectedAgent) return;
+
+    try {
+      const merged = {
+        ...selectedAgent,
+        ...patch,
+        id: selectedAgent.id,
+        partitionKey: selectedAgent.partitionKey,
+        container: selectedAgent.container,
+      };
+
+      await updateAgent(merged);
+
+      setIsEditOpen(false);
+      setSelectedAgent(null);
+
+      const items = await loadAgents();
+      setAgents(items);
+    } catch (e) {
+      console.error("Failed to update agent:", e);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -72,6 +115,7 @@ export default function AgentsPage() {
           agents={agents}
           isLoading={isLoading}
           loadError={loadError}
+          onOpen={handleOpenEdit}
         />
       </div>
 
@@ -80,6 +124,16 @@ export default function AgentsPage() {
         onClose={handleClose}
         onSave={handleSave}
       />
+
+      {isEditOpen && selectedAgent && (
+        <AgentEditModal
+          key={selectedAgent.id}
+          isOpen={true}
+          agent={selectedAgent}
+          onClose={handleCloseEdit}
+          onSave={handleSaveEdit}
+        />
+      )}
     </div>
   );
 }

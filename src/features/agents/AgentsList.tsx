@@ -8,9 +8,15 @@ type AgentsListProps = {
   agents: Array<StoredItem<Agent>>;
   isLoading: boolean;
   loadError: string | null;
+  onOpen: (agent: StoredItem<Agent>) => void;
 };
 
-export function AgentsList({ agents, isLoading, loadError }: AgentsListProps) {
+export function AgentsList({
+  agents,
+  isLoading,
+  loadError,
+  onOpen,
+}: AgentsListProps) {
   if (isLoading) return <div>Loading...</div>;
   if (loadError) return <div className="formError">{loadError}</div>;
   if (agents.length === 0) return <div>No agents yet.</div>;
@@ -22,6 +28,7 @@ export function AgentsList({ agents, isLoading, loadError }: AgentsListProps) {
           dataId={agent.id}
           dataContainer={agent.container}
           title={agent.name}
+          onClick={() => onOpen(agent)}
         >
           <div>
             <strong>Description</strong>

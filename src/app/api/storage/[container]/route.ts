@@ -44,3 +44,30 @@ export async function GET(_req: Request, ctx: Ctx) {
 
   return NextResponse.json(resources, { status: 200 });
 }
+
+export async function PUT(req: Request, ctx: Ctx) {
+  const { container: containerId } = await ctx.params;
+
+  const body = await req.json();
+
+  if (!body?.id) {
+    return NextResponse.json(
+      { error: "Missing id for update." },
+      { status: 400 }
+    );
+  }
+
+  const item = {
+    ...body,
+    partitionKey: COSMOS_PARTITION_KEY_VALUE,
+    container: containerId,
+  };
+
+  const container = cosmosClient
+    .database(COSMOS_DATABASE_ID)
+    .container(containerId);
+
+  const { resource } = await container.items.upsert(item);
+
+  return NextResponse.json(resource, { status: 200 });
+}
