@@ -318,3 +318,243 @@ UX-Verbesserungen (Confirm, Toasts, Optimistic Updates)
 Status-Fazit:
 Das Projekt besitzt jetzt eine konsistente, saubere und skalierbare Verwaltungsarchitektur.
 Neue Features lassen sich mechanisch nach etablierten Mustern ergänzen, ohne Refactor-Zwang.
+
+---
+
+Ergänzung als Nachtrag zu oben stehender Zusammenfassung:
+
+1. Status seit der letzten Zusammenfassung
+
+Kurzantwort:
+Ja, korrekt: seit der letzten Zusammenfassung wurde funktional noch nichts am Feature-Set geändert.
+
+Konkret passiert ist nur:
+
+ui/Card wurde technisch erweitert, sodass sie optional drag/drop-fähig ist
+(neue Props: draggable, onDragStart, onDragOver, onDrop, Default = aus)
+
+Nicht passiert seitdem:
+
+keine Page-Änderungen (AgentsPage, ToolsPage, etc.)
+
+keine neue Liste gebaut
+
+keine Drag/Drop-Logik implementiert
+
+keine Agent-Tool-Verknüpfung
+
+keine Chat-Page
+
+keine Backend-Endpunkte
+
+➡️ Die letzte Zusammenfassung ist also inhaltlich weiterhin korrekt, nur mit einem Zusatz:
+
+Die Card-Komponente ist jetzt technisch auf Drag & Drop vorbereitet.
+
+2. Neue Zusammenfassung des Gesprächs seit der letzten Zusammenfassung
+
+Diese Zusammenfassung kannst du ebenfalls 1:1 für den nächsten Chat verwenden.
+
+Ergänzende Zusammenfassung – Stand nach letzter Architektur-Zusammenfassung
+Ausgangslage
+
+Das Projekt besitzt eine stabile Admin-Architektur für:
+
+Agents
+
+MCP-Server
+
+persistierte ToolSchemas
+
+ToolSchema Create/Edit ist konsolidiert (ToolSchemaCreateOrEditModal)
+
+Datenflüsse und Persistenzmuster sind konsistent und bewährt
+
+Vorhaben 1: Agent ↔ ToolSchema-Verknüpfung (UI + Persistenz)
+Zielbild
+
+Agents sollen mit persistierten ToolSchemas verknüpft werden.
+
+ToolSchemas können visuell einem Agent zugewiesen werden
+
+Die Zuweisung erfolgt über Drag & Drop
+
+Die Verknüpfung wird persistiert im Agent-Dokument
+
+Technischer Stand (bereits erledigt)
+
+ui/Card wurde erweitert:
+
+unterstützt optional Drag & Drop
+
+Default-Verhalten bleibt unverändert (nicht draggable)
+
+Keine bestehende Page wurde dadurch beeinflusst
+
+Geplante UI-Struktur
+
+1. Neue ToolSchema-Liste für die AgentsPage
+
+Es wird nicht die bestehende ToolSchemasList wiederverwendet.
+
+Stattdessen:
+
+Neue Komponente (z. B. ToolSchemaPickerList)
+
+Einsatz nur auf der AgentsPage
+
+Darstellung:
+
+Mini-Cards
+
+stark reduziert (z. B. nur name_for_llm + server_url)
+
+keine Args, keine Beschreibungen
+
+Eigenschaften:
+
+alle Cards draggable
+
+Cards bleiben klickbar
+
+Klick öffnet das bestehende ToolSchemaCreateOrEditModal (Edit)
+
+➡️ Zweck: Auswahl- und Zuordnungsoberfläche, nicht Verwaltung.
+
+2. Agent-Cards als Drop-Ziel
+
+Agent-Cards werden droppable
+
+Beim Drop eines ToolSchemas auf einen Agent:
+
+ein Tool-Referenz-Tripel wird im Agent gespeichert
+
+Geplantes Referenzformat im Agent:
+
+{
+tool_id: string; // ToolSchema.id
+container: string; // z. B. "toolschemas"
+name_for_llm: string; // für UI
+server_url: string; // für UI / Kontext
+}
+
+id + container dienen der späteren Auflösung aus Cosmos
+
+name_for_llm + server_url sind rein UI-/Kontextdaten
+
+Persistenz:
+
+Merge in bestehendes StoredItem<Agent>
+
+updateAgent(merged)
+
+Reload der Agents-Liste
+
+3. Anzeige der Tools am Agent
+
+Agent-Cards (und Agent-Edit-Modal) zeigen eine einfache Liste der zugewiesenen Tools
+
+Darstellung zunächst minimal (Text oder Mini-Badge)
+
+Keine komplexe Interaktion im MVP
+
+Vorhaben 2: Agent-basierter Chat-Kontext (Frontend + Backend)
+Zielbild
+
+Ein neuer Chat-Bereich soll entstehen, der:
+
+einen Agent auswählbar macht
+
+automatisch Agent + zugewiesene ToolSchemas als Kontext lädt
+
+diesen Kontext gesammelt an ein LLM weiterreicht
+
+Architekturidee (bewusst simpel)
+Frontend (Chat-Page)
+
+Beim Betreten der Chat-Page:
+
+loadAgents()
+
+loadToolSchemas()
+
+beide Ergebnisse werden einmalig geladen
+
+Daten werden im Client gecached (Maps / State)
+
+Agent-Auswahl:
+
+User wählt einen Agent
+
+Frontend:
+
+liest Tool-Referenzen aus dem Agent
+
+resolved die zugehörigen ToolSchemas aus dem Cache
+
+Ergebnis:
+
+selectedAgent
+
+selectedToolSchemas
+
+➡️ Kein erneutes Nachladen pro Nachricht, nur beim Wechsel des Agenten.
+
+Kontextbildung für LLM
+
+Aus selectedAgent + selectedToolSchemas wird ein einheitlicher Kontextblock gebaut
+
+Dieser Block wird gemeinsam mit der User-Nachricht an das Backend gesendet
+
+Beispiel (konzeptionell):
+
+{
+"agent": { ... },
+"toolschemas": [ ... ],
+"user_message": "..."
+}
+
+Backend (geplant)
+
+Neuer Endpoint, z. B.:
+
+POST /api/chat
+
+Erwartet:
+
+Agent-Daten
+
+ToolSchemas
+
+User-Text
+
+Baut daraus den finalen Prompt / Kontext für das LLM
+
+Aktueller Arbeitsstand
+
+Architektur klar
+
+UI-Bausteine vorbereitet
+
+Keine halbfertigen Implementierungen
+
+Nächster konkreter Schritt:
+ToolSchemaPickerList bauen und auf AgentsPage integrieren
+
+Nächste konkrete Schritte (in Reihenfolge)
+
+Neue ToolSchemaPickerList (Mini-Cards, draggable, klickbar)
+
+Drop-Logik auf Agent-Cards
+
+Tool-Referenzen im Agent persistieren
+
+Anzeige der Tools am Agent
+
+Danach: Chat-Page + Kontext-Cache + Backend-Endpoint
+
+Wenn du im nächsten Chat einsteigst, kannst du direkt sagen:
+
+„Wir machen weiter bei Schritt 1: ToolSchemaPickerList bauen.“
+
+Dann sind wir sofort wieder on track, ohne Wiederholung.
