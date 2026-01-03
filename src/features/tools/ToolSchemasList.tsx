@@ -28,6 +28,7 @@ export function ToolSchemasList({
         <Card
           key={tool.id}
           title={tool.name_for_llm}
+          variant="toolschema"
           dataId={tool.id}
           dataContainer={tool.container}
           onClick={() => onOpen(tool)}

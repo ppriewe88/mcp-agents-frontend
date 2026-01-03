@@ -30,6 +30,7 @@ export function ServersList({
         <Card
           key={server.id}
           dataId={server.id}
+          variant="server"
           dataContainer={server.container}
           title={server.name}
         >

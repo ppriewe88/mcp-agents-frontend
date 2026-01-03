@@ -1,5 +1,4 @@
 "use client";
-import styles from "@/app/agents/page.module.css";
 import type { Agent } from "@/models/agent";
 import type { StoredItem } from "@/storage/storage";
 import { Card } from "@/ui/Card";
@@ -26,13 +25,14 @@ export function AgentsList({
   if (loadError) return <div className="formError">{loadError}</div>;
   if (agents.length === 0) return <div>No agents yet.</div>;
   return (
-    <div className={styles.grid}>
+    <div className="grid">
       {agents.map((agent) => (
         <Card
           key={agent.id}
           dataId={agent.id}
           dataContainer={agent.container}
           title={agent.name}
+          variant="agent"
           onClick={() => onOpen(agent)}
           onDragOver={(e) => {
             e.preventDefault();
@@ -57,7 +57,7 @@ export function AgentsList({
         >
           <div>
             <strong>Description</strong>
-            <div>{agent.description}</div>
+            <div className="textClamp">{agent.description}</div>
           </div>
 
           <div>

@@ -1,6 +1,80 @@
 :root {
+  /* System */
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Core palette */
+  --color-bg: #ffffff;
+  --color-fg: #111827;
+  --color-muted: #6b7280;
+  --color-border: #e5e7eb;
+
+  /* Surfaces */
+  --color-surface: #ffffff;
+  --color-surface-alt: #f9fafb;
+
+  /* Accent */
+  --color-primary: #111827;
+  --color-primary-hover: #1f2937;
+  --color-primary-soft: rgba(17, 24, 39, 0.1);
+
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-accent-soft: rgba(37, 99, 235, 0.14);
+
+  /* Danger */
+  --color-danger: #ef4444;
+  --color-danger-soft: rgba(239, 68, 68, 0.12);
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  /* Shadow + hover motion */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.15);
+  --shadow-hover: 0 8px 16px rgba(17, 24, 39, 0.1);
+
+  --hover-tilt-y: -1px;
+  --transition-fast: 120ms;
+  --transition-med: 160ms;
+
+  /* Card variants (defaults map to existing neutral look) */
+  --card-bg: var(--color-surface);
+  --card-border: var(--color-border);
+  --card-title: var(--color-fg);
+  --card-body: var(--color-muted);
+  --card-hover-bg: var(--color-surface);
+  --card-hover-border: var(--color-border);
+  --card-hover-shadow: var(--shadow-hover);
+
+  /* Example variant palettes (tuned to your existing system) */
+  --card-agent-bg: rgba(37, 99, 235, 0.08);
+  --card-agent-border: rgba(37, 99, 235, 0.3);
+  --card-agent-hover-bg: rgba(37, 99, 235, 0.12);
+  --card-agent-hover-border: rgba(37, 99, 235, 0.42);
+
+  --card-toolschema-bg: rgba(16, 185, 129, 0.08);
+  --card-toolschema-border: rgba(16, 185, 129, 0.3);
+  --card-toolschema-hover-bg: rgba(16, 185, 129, 0.12);
+  --card-toolschema-hover-border: rgba(16, 185, 129, 0.42);
+
+  --card-server-bg: rgba(107, 114, 128, 0.08);
+  --card-server-border: rgba(107, 114, 128, 0.28);
+  --card-server-hover-bg: rgba(107, 114, 128, 0.12);
+  --card-server-hover-border: rgba(107, 114, 128, 0.38);
+
+  --card-servertool-bg: var(--card-server-bg);
+  --card-servertool-border: var(--card-server-border);
+  --card-servertool-hover-bg: var(--card-server-hover-bg);
+  --card-servertool-hover-border: var(--card-server-hover-bg);
+
+  /* Modal (single neutral style, opaque) */
+  --modal-bg: #f3f4f6;
+  --modal-border: #d1d5db;
+  --modal-title: var(--color-fg);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -41,8 +115,7 @@ a {
   }
 }
 
-/* css for the app layout and navigation components */
-/* Layout */
+/* ################################## Layout ################################## */
 
 .appShell {
   display: grid;
@@ -50,19 +123,32 @@ a {
   min-height: 100vh;
 }
 
-.sidebar {
-  border-right: 1px solid #e5e7eb;
-  padding: 16px;
-}
-
 .main {
   padding: 24px;
 }
 
-/* Navigation */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+/* ################################## Sidebar ################################## */
+
+.sidebar {
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: 16px;
+}
+
+/* ################################## Navigation ################################## */
+
 .navTitle {
   font-weight: 600;
+  background: transparent;
+  border-radius: var(--radius-sm);
   margin-bottom: 12px;
+  color: var(--color-fg);
 }
 
 .navList {
@@ -72,20 +158,33 @@ a {
 }
 
 .navButton {
+  background: var(--color-primary);
+  color: #ffffff;
   display: block;
   padding: 10px 12px;
-  border-radius: 8px;
-  text-decoration: none;
-  color: inherit;
-  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-primary);
+  transition: background var(--transition-fast),
+    box-shadow var(--transition-fast), transform var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .navButton:hover {
-  border-color: #e5e7eb;
-  background: #f9fafb;
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(var(--hover-tilt-y));
 }
 
-/* grid, container and headers */
+.navButtonActive {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+/* ################################## Grid, container and headers ################################## */
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -103,23 +202,32 @@ a {
   justify-content: flex-start;
 }
 
-/* add button */
+/* ################################## Add button ################################## */
+
 .addButton {
   width: 40px;
   height: 40px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background: white;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: #ffffff;
   font-size: 24px;
   line-height: 1;
   cursor: pointer;
+  transition: background var(--transition-fast),
+    box-shadow var(--transition-fast), transform var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .addButton:hover {
-  background: #f9fafb;
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(var(--hover-tilt-y));
 }
 
-/* Modal */
+/* ################################## Modal ################################## */
+
 .modalBackdrop {
   position: fixed;
   inset: 0;
@@ -132,17 +240,23 @@ a {
 }
 
 .modalPanel {
+  /* defaults */
+  --_modal-bg: var(--modal-bg);
+  --_modal-border: var(--modal-border);
+  --_modal-title: var(--modal-title);
+
   width: min(1200px, 100%);
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  background: var(--_modal-bg);
+  border: 1px solid var(--_modal-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   padding: 16px;
 }
 
 .modalTitle {
   font-weight: 600;
   margin-bottom: 12px;
+  color: var(--_modal-title);
 }
 
 .modalBody {
@@ -151,7 +265,8 @@ a {
   gap: 12px;
 }
 
-/* Form */
+/* ################################## Form ################################## */
+
 .formField {
   display: flex;
   flex-direction: column;
@@ -160,17 +275,18 @@ a {
 
 .formLabel {
   font-size: 0.9rem;
-  color: #374151;
+  color: var(--color-muted);
 }
 
 .textInput,
 .textArea {
   width: 100%;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px 12px;
   font: inherit;
-  background: white;
+  background: var(--color-surface);
+  color: var(--color-fg);
 }
 
 .textArea {
@@ -180,27 +296,8 @@ a {
 .textInput:focus,
 .textArea:focus {
   outline: none;
-  border-color: #cbd5e1;
-  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.25);
-}
-
-.primaryButton {
-  align-self: flex-start;
-  border: 1px solid #111827;
-  background: #111827;
-  color: white;
-  border-radius: 8px;
-  padding: 10px 14px;
-  cursor: pointer;
-}
-
-.primaryButton:hover {
-  opacity: 0.92;
-}
-
-.primaryButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  border-color: var(--color-border);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
 }
 
 .formError {
@@ -208,30 +305,125 @@ a {
   background: #fef2f2;
   border: 1px solid #fecaca;
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
+/* ################################## Button ################################## */
+
+.primaryButton {
+  align-self: flex-start;
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background var(--transition-fast),
+    box-shadow var(--transition-fast), transform var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.primaryButton:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(var(--hover-tilt-y));
+}
+
+.primaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* ################################## Card ################################## */
+
 .card {
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  /* defaults (neutral) */
+  --_card-bg: var(--card-bg);
+  --_card-border: var(--card-border);
+  --_card-title: var(--card-title);
+  --_card-body: var(--card-body);
+  --_card-hover-bg: var(--card-hover-bg);
+  --_card-hover-border: var(--card-hover-border);
+  --_card-hover-shadow: var(--card-hover-shadow);
+
+  border: 1px solid var(--_card-border);
+  border-radius: var(--radius-md);
   padding: 12px;
-  background: white;
+  background: var(--_card-bg);
   cursor: default;
+  transition: background var(--transition-fast),
+    box-shadow var(--transition-fast), transform var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .card:hover {
-  background: #f9fafb;
+  background: var(--_card-hover-bg);
+  border-color: var(--_card-hover-border);
+  box-shadow: var(--_card-hover-shadow);
+  transform: translateY(var(--hover-tilt-y));
 }
 
 .cardTitle {
   font-weight: 600;
   margin-bottom: 6px;
+  color: var(--_card-title);
+
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .cardBody {
-  color: #6b7280;
+  color: var(--_card-body);
   font-size: 0.95rem;
 }
+
+/* Variants via data-attribute */
+
+.card[data-variant="agent"] {
+  --_card-bg: var(--card-agent-bg);
+  --_card-border: var(--card-agent-border);
+  --_card-hover-bg: var(--card-agent-hover-bg);
+  --_card-hover-border: var(--card-agent-hover-border);
+}
+
+.card[data-variant="toolschema"] {
+  --_card-bg: var(--card-toolschema-bg);
+  --_card-border: var(--card-toolschema-border);
+  --_card-hover-bg: var(--card-toolschema-hover-bg);
+  --_card-hover-border: var(--card-toolschema-hover-border);
+}
+
+.card[data-variant="server"] {
+  --_card-bg: var(--card-server-bg);
+  --_card-border: var(--card-server-border);
+  --_card-hover-bg: var(--card-server-hover-bg);
+  --_card-hover-border: var(--card-server-hover-border);
+}
+
+.card[data-variant="servertool"] {
+  --_card-bg: var(--card-servertool-bg);
+  --_card-border: var(--card-servertool-border);
+  --_card-hover-bg: var(--card-servertool-hover-bg);
+  --_card-hover-border: var(--card-servertool-hover-border);
+}
+
+.card[data-variant="toolbadge"] {
+  --_card-bg: var(--card-toolbadge-bg);
+  --_card-border: var(--card-toolbadge-border);
+  --_card-hover-bg: var(--card-toolbadge-hover-bg);
+  --_card-hover-border: var(--card-toolbadge-hover-border);
+}
+
+/* ################################## Checkbox ################################## */
 
 .checkboxRow {
   display: flex;
@@ -240,10 +432,12 @@ a {
   user-select: none;
 }
 
+/* ################################## Scroll elements ################################## */
+
 .scrollBox {
-  max-height: 360px; /* nach Geschmack: 300–450 */
+  max-height: 360px;
   overflow-y: auto;
-  padding-right: 6px; /* Platz für Scrollbar */
+  padding-right: 6px;
 }
 
 .scrollContainerWrapper {
@@ -255,38 +449,76 @@ a {
 .scrollContainerTitle {
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-muted);
 }
 
 .scrollContainer {
-  max-height: 400px; /* falls vorhanden, sonst weglassen */
+  max-height: 400px;
   overflow-y: auto;
-  padding-right: 4px; /* optional für Scrollbar-Abstand */
+  padding-right: 4px;
 }
+
+.scrollBox {
+  max-height: 200px; /* nach Geschmack: 120–240px */
+  overflow-y: auto;
+  padding-right: 6px; /* Platz für Scrollbar */
+}
+
+.scrollBoxSmall {
+  max-height: 100px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* ################################## List areas ################################## */
 
 .listArea {
   min-height: 200px;
-  border: 1px dashed #e5e7eb;
-  border-radius: 8px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  background: var(--color-surface);
+  transition: background var(--transition-fast),
+    box-shadow var(--transition-fast), transform var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.listArea:hover {
+  box-shadow: var(--shadow-hover);
 }
 
 .listAreaHalf {
   width: 50%;
-  border: 1px dashed #e5e7eb;
-  border-radius: 8px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 16px;
   min-width: 0;
+  background: var(--color-surface);
+  transition: background var(--transition-fast),
+    box-shadow var(--transition-fast), transform var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.listAreaHalf:hover {
+  box-shadow: var(--shadow-hover);
 }
 
 .listAreaTitle {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-muted);
 }
+
+.halfRowWrap {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+/* ################################## Tool badges ################################## */
 
 .toolBadges {
   display: flex;
@@ -299,10 +531,20 @@ a {
   align-items: flex-start;
   gap: 8px;
   padding: 6px 10px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #fff;
+  border: 1px solid var(--card-toolschema-border);
+  border-radius: var(--radius-sm);
+  background: var(--card-toolschema-bg);
   max-width: 100%;
+  transition: background var(--transition-fast),
+    box-shadow var(--transition-fast), transform var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.toolBadge:hover {
+  background: var(--card-toolschema-hover-bg);
+  border-color: var(--card-toolschema-hover-border);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(var(--hover-tilt-y));
 }
 
 .toolBadgeText {
@@ -314,27 +556,43 @@ a {
 .toolBadgeName {
   font-size: 12px;
   font-weight: 600;
-  color: #111827;
+  color: var(--color-fg);
   line-height: 1.2;
 }
 
 .toolBadgeMeta {
   font-size: 11px;
-  color: #6b7280;
+  color: var(--color-muted);
   line-height: 1.2;
   word-break: break-all;
 }
 
 .toolBadgeRemove {
   border: none;
-  background: transparent;
-  color: #9ca3af;
+  background: var(--color-primary);
+  color: #ffffff;
   font-size: 14px;
   line-height: 1;
   cursor: pointer;
-  padding: 0 2px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast),
+    box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
 .toolBadgeRemove:hover {
-  color: #ef4444;
+  background: var(--color-primary-hover);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(var(--hover-tilt-y));
+}
+
+/* ################################## special texts ################################## */
+.textClamp {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

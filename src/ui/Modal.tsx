@@ -2,14 +2,25 @@
 
 import { ReactNode } from "react";
 
+type ModalVariant = "default" | "agent" | "toolschema" | "server";
+
 type ModalProps = {
   isOpen: boolean;
   title?: string;
   onClose: () => void;
   children: ReactNode;
+
+  // optional coloring
+  variant?: ModalVariant;
 };
 
-export function Modal({ isOpen, title, onClose, children }: ModalProps) {
+export function Modal({
+  isOpen,
+  title,
+  onClose,
+  children,
+  variant = "default",
+}: ModalProps) {
   if (!isOpen) return null;
 
   const handleBackdropClick = () => {
@@ -28,6 +39,7 @@ export function Modal({ isOpen, title, onClose, children }: ModalProps) {
     >
       <div
         className="modalPanel"
+        data-variant={variant}
         role="dialog"
         aria-modal="true"
         aria-label={title ?? "Modal"}

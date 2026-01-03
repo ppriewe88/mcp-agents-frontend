@@ -30,6 +30,7 @@ export function DragToolSchemasList({ tools, isLoading, loadError }: Props) {
             key={tool.id}
             title={tool.name_for_llm}
             dataId={tool.id}
+            variant="toolschema"
             dataContainer={tool.container}
             draggable={true}
             onDragStart={(e) => {

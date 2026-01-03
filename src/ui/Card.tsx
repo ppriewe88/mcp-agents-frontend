@@ -1,11 +1,22 @@
 import type { ReactNode, DragEventHandler } from "react";
 
+type CardVariant =
+  | "default"
+  | "agent"
+  | "toolschema"
+  | "server"
+  | "servertool"
+  | "toolbadge";
+
 type CardProps = {
   title: string;
   dataId: string;
   dataContainer: string;
   children?: ReactNode;
   onClick?: () => void;
+
+  // optional coloring
+  variant?: CardVariant;
 
   // optional Drag & Drop (default: disabled)
   draggable?: boolean;
@@ -20,6 +31,7 @@ export function Card({
   dataContainer,
   children,
   onClick,
+  variant = "default",
   draggable = false,
   onDragStart,
   onDragOver,
@@ -28,6 +40,7 @@ export function Card({
   return (
     <div
       className="card"
+      data-variant={variant}
       data-id={dataId}
       data-container={dataContainer}
       onClick={onClick}
@@ -42,35 +55,3 @@ export function Card({
     </div>
   );
 }
-
-// import { ReactNode } from "react";
-
-// type CardProps = {
-//   title: string;
-//   dataId: string;
-//   dataContainer: string;
-//   children?: ReactNode;
-//   onClick?: () => void;
-//   draggable?: boolean;
-// };
-
-// export function Card({
-//   title,
-//   dataId,
-//   dataContainer,
-//   children,
-//   onClick,
-// }: CardProps) {
-//   return (
-//     <div
-//       className="card"
-//       data-id={dataId}
-//       data-container={dataContainer}
-//       onClick={onClick}
-//       role={onClick ? "button" : undefined}
-//     >
-//       <div className="cardTitle">{title}</div>
-//       {children && <div className="cardBody">{children}</div>}
-//     </div>
-//   );
-// }

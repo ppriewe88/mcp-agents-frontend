@@ -1,6 +1,4 @@
 "use client";
-
-import styles from "@/app/servers/page.module.css";
 import { Card } from "@/ui/Card";
 import type { ServerTool } from "@/models/mcpServerTool";
 import { Button } from "@/ui/Button";
@@ -26,6 +24,7 @@ export function ServerToolsList({
       {tools.map((tool) => (
         <Card
           key={tool.function.name}
+          variant="servertool"
           dataContainer="__virtual__"
           dataId="__virtual__"
           title={tool.function.name}
@@ -42,7 +41,7 @@ export function ServerToolsList({
               <div style={{ fontWeight: 600, marginBottom: 6 }}>
                 Description
               </div>
-              <div className={styles.scrollBoxSmall}>
+              <div className="scrollBoxSmall">
                 <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>
                   {tool.function.description}
                 </pre>
@@ -53,7 +52,7 @@ export function ServerToolsList({
           {tool.function.parameters && (
             <div style={{ marginTop: 12 }}>
               <div style={{ fontWeight: 600, marginBottom: 6 }}>Parameters</div>
-              <div className={styles.scrollBox}>
+              <div className="scrollBox">
                 <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>
                   {JSON.stringify(tool.function.parameters, null, 2)}
                 </pre>

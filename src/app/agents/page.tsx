@@ -150,7 +150,7 @@ export default function AgentsPage() {
         )}
       </div>
 
-      <div className={styles.halfRowWrap}>
+      <div className="halfRowWrap">
         <ListAreaHalf title="Registered MCP-Tools">
           <DragToolSchemasList
             tools={tools}
