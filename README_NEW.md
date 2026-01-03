@@ -12,8 +12,7 @@ Es dient als Administrations- und Konfigurationsoberfläche für ein agentenbasi
 Der Fokus liegt auf klaren Datenflüssen, sauberer Schichtung und minimal-invasiver Erweiterbarkeit.
 
 2. Projektstruktur (Ist-Zustand)
-
-Technologie
+   Technologie
 
 Frontend: Next.js (App Router)
 
@@ -23,43 +22,54 @@ Persistenz: Azure Cosmos DB (serverseitig)
 
 Root: src/
 
+Aktuelle Struktur (relevant)
 src/
 ├─ app/
-│ ├─ agents/ // Agents-Verwaltung (Create + Edit)
+│ ├─ agents/ // Agents-Verwaltung
 │ ├─ servers/ // MCP-Server-Verwaltung
-│ ├─ tools/ // ToolSchemas-Verwaltung (Create + Edit)
+│ ├─ tools/ // ToolSchemas-Verwaltung
 │ ├─ api/
 │ │ └─ storage/[container]/route.ts // generische Cosmos-API
 │ ├─ layout.tsx
 │ └─ page.tsx // Startseite
 │
 ├─ features/
-│ ├─ agents/ // Agent-spezifische UI + Storage-Wrapper
-│ ├─ servers/ // Server-spezifische UI + Storage + Runtime-Tools
-│ └─ tools/ // ToolSchema UI + Storage
+│ ├─ agents/ // Agent UI + Storage-Wrapper
+│ ├─ servers/ // Server UI + Storage + Runtime-Tools
+│ └─ tools/
+│ ├─ ToolSchemaCreateOrEditModal.tsx
+│ ├─ ToolSchemasList.tsx
+│ ├─ toolschemas.storage.ts
+│ └─ toolschemas.utils.ts
 │
-├─ models/ // Reine Datenmodelle (ohne UI / Persistenz)
+├─ models/
+│ ├─ agent.ts
+│ ├─ mcpServer.ts
+│ ├─ mcpServerTool.ts
+│ └─ toolSchema.ts
 │
 ├─ storage/
-│ ├─ cosmos.ts // Serverseitige Cosmos-Client-Konfiguration
-│ └─ storage.ts // Generischer Client-Storage (GET/POST/PUT)
+│ ├─ cosmos.ts // serverseitiger Cosmos-Client
+│ └─ storage.ts // generischer Client-Storage
 │
-└─ ui/ // Reine, wiederverwendbare UI-Komponenten
+└─ ui/
+├─ Button.tsx
+├─ Modal.tsx
+├─ Card.tsx
+└─ weitere UI-Bausteine
 
 3. Architekturprinzipien (bindend)
    3.1 UI / Feature-Trennung
 
 ui/
 
-ausschließlich visuelle, wiederverwendbare Komponenten
+rein visuelle, wiederverwendbare Komponenten
 
 keine Fachlogik
 
 keine Persistenz
 
-Beispiele: Card, Modal, Button, TextInput
-
-features/\*
+features/
 
 fachliche Logik je Domäne
 
@@ -73,7 +83,7 @@ app/\*/page.tsx
 
 Orchestrierungsebene
 
-hält State (selectedItem, isEditOpen, Listen)
+hält State (selectedItem, isModalOpen, Listen)
 
 entscheidet über Create / Edit / Save / Refresh
 
@@ -88,13 +98,13 @@ eine generische API-Route für alle Container
 
 /api/storage/[container]
 
-4.2 API-Operationen (serverseitig)
-HTTP Zweck Cosmos-Operation
-GET Laden aller Items container.items.query(...)
-POST Create container.items.create(...)
-PUT Update / Upsert container.items.upsert(...)
+4.2 API-Operationen
+HTTP Zweck Cosmos
+GET Load all items query
+POST Create create
+PUT Update / Upsert upsert
 
-Wichtig
+Wichtig:
 
 container und partitionKey werden serverseitig gesetzt
 
@@ -102,15 +112,15 @@ Client darf diese nicht manipulieren
 
 4.3 Client-Storage (storage/storage.ts)
 
-Generischer, domänenunabhängiger Zugriff:
+Generische Funktionen:
 
-saveItemToContainer(container, item) → POST
+saveItemToContainer(container, item)
 
-loadItems(container) → GET
+loadItems(container)
 
-updateItemInContainer(container, storedItem) → PUT
+updateItemInContainer(container, storedItem)
 
-Zentraler Typ
+Zentraler Typ:
 
 type StoredItem<T> = T & {
 id: string;
@@ -118,58 +128,32 @@ partitionKey: string;
 container: string;
 };
 
-➡ Jedes Objekt „weiß“, woher es kommt (Container, Partition, ID).
+➡ Jedes Objekt kennt seine Persistenz-Metadaten.
 
-4.4 Feature-spezifische Storage-Wrapper
-
-Jede Domäne kapselt den generischen Storage:
+4.4 Feature-spezifische Wrapper
 
 agents.storage.ts
 
-saveAgent
-
-loadAgents
-
-updateAgent
-
 toolschemas.storage.ts
-
-saveToolSchema
-
-loadToolSchemas
-
-updateToolSchema
 
 servers.storage.ts
 
-analog
-
-➡ Pages arbeiten nur mit Feature-Wrappern, nie direkt mit storage.ts.
+➡ Pages sprechen nur mit Feature-Wrappern.
 
 5. Card-Konzept (bindend)
    type CardProps = {
    title: string;
    dataId: string;
-   dataContainer: string; // Cosmos oder "runtime"
+   dataContainer: string;
    children?: ReactNode;
    onClick?: () => void;
    };
 
-dataContainer dient nur Debugging / DOM-Lesbarkeit
-
-keine Business-Logik liest aus dem DOM
+dataContainer nur für Debugging
 
 Aktionen arbeiten immer mit vollständigen Items im State
 
-onOpen(item)
-
-Runtime-Daten
-
-z. B. ServerTools
-
-dataContainer = "runtime"
-
-niemals persistiert
+Card-Klick → onOpen(storedItem)
 
 6. Fachliche Domänen
    6.1 Agents
@@ -178,27 +162,23 @@ Page: /agents
 
 Persistenz: Cosmos (agents)
 
-Modell: models/agent.ts
-
-Funktionalität
+Status:
 
 Create ✔
 
 List ✔
 
-Edit ✔ (separates Edit-Modal, PUT-Flow)
+Edit ✔ (PUT-Flow)
 
 Tool-Zuweisung ❌ (geplant)
 
-Edit-Flow
+Edit-Flow:
 
-Card-Klick → StoredItem<Agent> in State
+Card-Klick → StoredItem in State
 
-AgentEditModal wird nur gemountet, wenn Agent existiert
+Edit-Modal nur gemountet, wenn Item existiert
 
-Save:
-
-Patch → Merge → updateAgent → Refresh
+Save: Patch → Merge → updateAgent → Reload
 
 6.2 MCP-Server
 
@@ -206,24 +186,22 @@ Page: /servers
 
 Persistenz: Cosmos (servers)
 
-Runtime: Tool-Abfrage aus MCP-Backend
+Runtime-Daten: Tools aus MCP-Backend
 
-Besonderheit
+Besonderheit:
 
-Mischung aus:
+Mischung aus persistierten Servern
 
-persistierter Server-Konfiguration
+und nicht persistierten Runtime-Tools
 
-nicht persistierten Runtime-Tools
-
-Status: vollständig funktionsfähig
+Status: stabil & funktionsfähig
 
 6.3 Tools
 6.3.1 Runtime-Tools (ServerTool)
 
 Herkunft: MCP-Server
 
-Modell: models/mcpServerTool.ts
+Modell: mcpServerTool.ts
 
 nicht persistiert
 
@@ -233,94 +211,71 @@ Page: /tools
 
 Persistenz: Cosmos (toolschemas)
 
-Modell: models/toolSchema.ts
+Modell: toolSchema.ts
 
-Funktionalität
+7. ToolSchema-Create & Edit (aktueller Stand)
+   Einheitliches Modal (neu, bindend)
 
-Registrierung (Create) ✔
+ToolSchemaCreateOrEditModal
 
-Anzeige ✔
+ersetzt ToolRegisterModal (Create)
 
-Edit ✔ (neu, analog Agents)
+ersetzt ToolEditModal (Edit)
 
-7. Tool-Registrierung
+unterscheidet Modus über:
 
-Ort: features/tools/ToolRegisterModal.tsx
+initialToolSchema?: StoredItem<ToolSchema> | null
 
-Zweck
+Verantwortlichkeiten
 
-Transformation:
+Modal
 
-ServerTool → ToolSchema
+UI-only
 
-Explizit gepflegt
+baut ToolSchema
 
-Namen (Server ↔ LLM)
+normalizeToolSchema + validateToolSchema
 
-Argumente
+ruft ausschließlich onSubmit(schema)
 
-Typen
+Page
 
-Beschreibungen
+entscheidet:
 
-Defaults
+Create → saveToolSchema
 
-Persistenz
+Edit → Merge + updateToolSchema
 
-saveToolSchema(...) → POST → Cosmos
+schließt Modal
 
-8. Edit-Konzept (bindend, bewährt)
+reloadet Liste
 
-Create-Modals bleiben unangetastet
+➡ exakt gleiches Muster wie bei Agents.
 
-Edit ist immer ein separates Modal
+8. Edit- & Modal-Konzept (bindend)
 
-kein Vermischen von Create/Edit
+ein Modal für Create + Edit
 
-Edit-Modal:
+kein useEffect zur Initialisierung
 
-bekommt vollständiges StoredItem<T>
+initiale Werte nur über useState(initial)
 
-wird nur gemountet, wenn Item existiert
+korrektes Remounting via:
 
-useState(initial) greift zuverlässig
+key={storedItem?.id ?? "create"}
 
-Save:
-
-Patch im Modal
-
-Merge + PUT auf Page-Ebene
-
-Refresh der Liste
-
-Dieses Muster ist 1:1 wiederverwendbar für alle Domänen.
-
-9. Datenflüsse (Lesen / Schreiben / Ändern)
+9. Datenflüsse
    Lesen
-   Page
-   → Feature-Storage (loadXxx)
-   → Client-Storage (GET)
-   → API /api/storage/[container]
-   → Cosmos
+
+Page → Feature-Storage → Client-Storage → API → Cosmos
 
 Create
-Modal
-→ Feature-Storage (saveXxx)
-→ Client-Storage (POST)
-→ API
-→ Cosmos.create
+
+Modal → Page(onSubmit) → saveXxx → POST → Cosmos → Reload
 
 Edit
-Card-Klick
-→ Page-State (selectedItem)
-→ Edit-Modal
-→ Patch
-→ Page: Merge
-→ Feature-Storage (updateXxx)
-→ Client-Storage (PUT)
-→ API
-→ Cosmos.upsert
-→ Refresh
+
+Card → Page-State → Modal → Patch → Merge → updateXxx → PUT → Reload
 
 10. Mentales Arbeitsmodell (bindend)
 
@@ -330,26 +285,36 @@ minimal-invasiv
 
 keine impliziten Feature-Sprünge
 
-Reihenfolge
+erst saubere Datenflüsse
 
-saubere Datenflüsse
+dann UI-Wiring
 
-klares UI-Wiring
+Persistenzänderungen vor neuen Features
 
-Persistenz-Anpassungen
+11. Aktueller Status
 
-erst danach neue Features
+ToolSchema Create ✔
 
-11. Nächste logische Schritte
+ToolSchema Edit ✔
 
-Delete-Flow (DELETE Route + Wrapper + Page-Orchestrierung)
+Modals konsolidiert ✔
+
+Alt-Code bereinigt ✔
+
+Utilities ausgelagert ✔
+
+Typisierung lint-sicher ✔
+
+12. Nächste logische Schritte
+
+Delete-Flow (DELETE API + Wrapper + Page)
 
 Tool-Zuweisung zu Agents
 
 Anzeige zugewiesener Tools auf Agent-Cards
 
-optionale UX-Verbesserungen (Confirmations, Optimistic Updates)
+UX-Verbesserungen (Confirm, Toasts, Optimistic Updates)
 
-Status:
-Das Projekt besitzt nun eine konsistente, skalierbare Verwaltungsarchitektur mit klarer Trennung von UI, Fachlogik und Persistenz.
-Neue Features (Edit, Delete, Zuweisungen) lassen sich mechanisch nach etablierten Mustern ergänzen, ohne Refactor-Zwang.
+Status-Fazit:
+Das Projekt besitzt jetzt eine konsistente, saubere und skalierbare Verwaltungsarchitektur.
+Neue Features lassen sich mechanisch nach etablierten Mustern ergänzen, ohne Refactor-Zwang.

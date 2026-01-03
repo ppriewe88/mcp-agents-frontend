@@ -7,7 +7,13 @@ import { TextInput } from "@/ui/TextInput";
 import { TextArea } from "@/ui/TextArea";
 import type { StoredItem } from "@/storage/storage";
 import type { ServerTool } from "@/models/mcpServerTool";
-import type { ToolSchema, ToolArg, EmptyDefault } from "@/models/toolSchema";
+import type { ToolSchema, ToolArg } from "@/models/toolSchema";
+import {
+  defaultToString,
+  parseDefaultValue,
+  normalizeToolSchema,
+  validateToolSchema,
+} from "@/features/tools/toolschemas.utils";
 
 type Props = {
   isOpen: boolean;
@@ -34,60 +40,6 @@ type ServerParamDef = {
   description?: string;
   default?: unknown;
 };
-
-function defaultToString(d: ToolArg["default"]): string {
-  if (d === undefined || d === null) return "";
-  if (typeof d === "string") return d;
-  if (typeof d === "object" && (d as EmptyDefault)?.kind === "EmptyDefault")
-    return "EmptyDefault";
-  return JSON.stringify(d);
-}
-
-function parseDefaultValue(raw: string): string | EmptyDefault | null {
-  const v = raw.trim();
-  if (!v) return null;
-
-  if (v === "EmptyDefault" || v === '{"kind":"EmptyDefault"}') {
-    return { kind: "EmptyDefault" };
-  }
-  return v;
-}
-
-function normalizeToolSchema(schema: ToolSchema): ToolSchema {
-  return {
-    ...schema,
-    server_url: schema.server_url?.trim() ?? "",
-    name_on_server: schema.name_on_server?.trim() ?? "",
-    name_for_llm: schema.name_for_llm?.trim() ?? "",
-    description_for_llm: schema.description_for_llm?.trim() ?? "",
-    args_schema: {
-      type: "object",
-      properties: Array.isArray(schema.args_schema?.properties)
-        ? schema.args_schema.properties
-        : [],
-      additionalProperties: false,
-    },
-  };
-}
-
-/**
- * Minimal, local validation.
- * If you already have a shared validateToolSchema utility, replace this function + call site.
- */
-function validateToolSchema(schema: ToolSchema): void {
-  if (!schema.server_url?.trim()) throw new Error("No server url provided.");
-  if (!schema.name_on_server?.trim())
-    throw new Error("Tool name (server) missing.");
-  if (!schema.name_for_llm?.trim())
-    throw new Error("Tool name (for llm) missing.");
-
-  if (schema.args_schema?.type !== "object") {
-    throw new Error("args_schema.type must be 'object'.");
-  }
-  if (!Array.isArray(schema.args_schema?.properties)) {
-    throw new Error("args_schema.properties must be an array.");
-  }
-}
 
 export function ToolSchemaCreateOrEditModal({
   isOpen,
@@ -119,7 +71,7 @@ export function ToolSchemaCreateOrEditModal({
     ? initialToolSchema!.description_for_llm ?? ""
     : baseServerDescription;
 
-  // --- Form state (Step 2: init from initialToolSchema?.field ?? default) ---
+  // --- Form state (init from initialToolSchema) ---
   const [nameForLlm, setNameForLlm] = useState(baseNameForLlm);
   const [descriptionForLlm, setDescriptionForLlm] = useState(
     baseDescriptionForLlm
@@ -299,30 +251,30 @@ export function ToolSchemaCreateOrEditModal({
         const requiredList = params?.required ?? [];
         const props = params?.properties ?? {};
 
-        argList = Object.entries(props).map(([paramName, def]) => {
-          const llmName = getLlmParamValueCreate(paramName, "name_for_llm");
-          const llmType = getLlmParamValueCreate(paramName, "type");
-          const llmDescription = getLlmParamValueCreate(
-            paramName,
-            "description"
-          );
-          const llmDefaultRaw = getLlmParamValueCreate(paramName, "default");
+        argList = Object.entries(props as Record<string, ServerParamDef>).map(
+          ([paramName, def]) => {
+            const llmName = getLlmParamValueCreate(paramName, "name_for_llm");
+            const llmType = getLlmParamValueCreate(paramName, "type");
+            const llmDescription = getLlmParamValueCreate(
+              paramName,
+              "description"
+            );
+            const llmDefaultRaw = getLlmParamValueCreate(paramName, "default");
 
-          const required = requiredList.includes(paramName);
+            const required = requiredList.includes(paramName);
 
-          return {
-            name_on_server: paramName,
-            name_for_llm: llmName?.trim() ? llmName.trim() : paramName,
-            description_for_llm: llmDescription?.trim()
-              ? llmDescription.trim()
-              : "",
-            type: llmType?.trim()
-              ? llmType.trim()
-              : (def as any)?.type ?? "string",
-            required,
-            default: parseDefaultValue(llmDefaultRaw),
-          };
-        });
+            return {
+              name_on_server: paramName,
+              name_for_llm: llmName?.trim() ? llmName.trim() : paramName,
+              description_for_llm: llmDescription?.trim()
+                ? llmDescription.trim()
+                : "",
+              type: llmType?.trim() ? llmType.trim() : def.type ?? "string",
+              required,
+              default: parseDefaultValue(llmDefaultRaw),
+            };
+          }
+        );
       } else {
         // Edit mode: derive args from stored args_schema (keep required as-is MVP)
         const props = initialToolSchema!.args_schema?.properties ?? [];
