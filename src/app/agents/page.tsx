@@ -3,6 +3,8 @@
 import styles from "./page.module.css";
 import { useState, useEffect } from "react";
 import { AddButton } from "@/ui/AddButton";
+import { ListArea } from "@/ui/ListArea";
+import { ListAreaHalf } from "@/ui/ListAreaHalf";
 import { AgentCreateOrEditModal } from "@/features/agents/AgentCreateOrEditModal";
 import type { Agent } from "@/models/agent";
 import type { StoredItem } from "@/storage/storage";
@@ -11,7 +13,10 @@ import {
   saveAgent,
   updateAgent,
 } from "@/features/agents/agents.storage";
+import type { ToolSchema } from "@/models/toolSchema";
+import { loadToolSchemas } from "@/features/tools/toolschemas.storage";
 import { AgentsList } from "@/features/agents/AgentsList";
+import { DragToolSchemasList } from "@/features/tools/ToolSchemasDragList";
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<Array<StoredItem<Agent>>>([]);
@@ -19,6 +24,7 @@ export default function AgentsPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAgent, setModalAgent] = useState<StoredItem<Agent> | null>(null);
+  const [tools, setTools] = useState<Array<StoredItem<ToolSchema>>>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -27,8 +33,10 @@ export default function AgentsPage() {
       setIsLoading(true);
       setLoadError(null);
       try {
-        const items = await loadAgents();
-        if (!cancelled) setAgents(items);
+        const agents = await loadAgents();
+        if (!cancelled) setAgents(agents);
+        const toolSchemas = await loadToolSchemas();
+        if (!cancelled) setTools(toolSchemas);
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Failed to load agents.";
         if (!cancelled) setLoadError(msg);
@@ -48,7 +56,7 @@ export default function AgentsPage() {
     setIsModalOpen(true);
   };
 
-  const handleOpenEdit = (agent: StoredItem<Agent>) => {
+  const handleOpenAgentEdit = (agent: StoredItem<Agent>) => {
     setModalAgent(agent);
     setIsModalOpen(true);
   };
@@ -85,29 +93,45 @@ export default function AgentsPage() {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <AddButton onClick={handleAddAgent} ariaLabel="Create new agent" />
+    <>
+      <div className="container">
+        <div className="container">
+          <AddButton onClick={handleAddAgent} ariaLabel="Create new agent" />
+        </div>
+
+        <ListArea title="Agent Configurations">
+          <AgentsList
+            agents={agents}
+            isLoading={isLoading}
+            loadError={loadError}
+            onOpen={handleOpenAgentEdit}
+          />
+        </ListArea>
+
+        {isModalOpen && (
+          <AgentCreateOrEditModal
+            key={modalAgent?.id ?? "create"}
+            isOpen={true}
+            initialAgent={modalAgent}
+            onClose={handleCloseModal}
+            onSubmit={handleSubmitCreateOrEdit}
+          />
+        )}
       </div>
 
-      <div className={styles.listArea}>
-        <AgentsList
-          agents={agents}
-          isLoading={isLoading}
-          loadError={loadError}
-          onOpen={handleOpenEdit}
-        />
-      </div>
+      <div className={styles.halfRowWrap}>
+        <ListAreaHalf title="Registered MCP-Tools">
+          <DragToolSchemasList
+            tools={tools}
+            isLoading={isLoading}
+            loadError={loadError}
+          />
+        </ListAreaHalf>
 
-      {isModalOpen && (
-        <AgentCreateOrEditModal
-          key={modalAgent?.id ?? "create"}
-          isOpen={true}
-          initialAgent={modalAgent}
-          onClose={handleCloseModal}
-          onSubmit={handleSubmitCreateOrEdit}
-        />
-      )}
-    </div>
+        <ListAreaHalf title="Registered Agents as Tools">
+          PLACEHOLDER FOR AGENTS AS TOOLS CARDS
+        </ListAreaHalf>
+      </div>
+    </>
   );
 }

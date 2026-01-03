@@ -23,7 +23,7 @@ export function ToolSchemasList({
   if (tools.length === 0) return <div>No tools yet.</div>;
 
   return (
-    <div className={styles.grid}>
+    <div className="grid">
       {tools.map((tool) => (
         <Card
           key={tool.id}

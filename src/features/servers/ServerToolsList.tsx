@@ -22,7 +22,7 @@ export function ServerToolsList({
   if (tools.length === 0) return <div>No tools loaded.</div>;
 
   return (
-    <div className={styles.grid}>
+    <div className="grid">
       {tools.map((tool) => (
         <Card
           key={tool.function.name}

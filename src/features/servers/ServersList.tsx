@@ -1,6 +1,5 @@
 "use client";
 
-import styles from "@/app/servers/page.module.css";
 import type { MCPServer } from "@/models/mcpServer";
 import type { StoredItem } from "@/storage/storage";
 import { Card } from "@/ui/Card";
@@ -26,7 +25,7 @@ export function ServersList({
   if (servers.length === 0) return <div>No servers yet.</div>;
 
   return (
-    <div className={styles.grid}>
+    <div className="grid">
       {servers.map((server) => (
         <Card
           key={server.id}

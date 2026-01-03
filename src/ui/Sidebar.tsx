@@ -8,9 +8,9 @@ export function Sidebar() {
       <div className="navTitle">MCP Playground</div>
 
       <nav className="navList">
-        <NavButton href="/agents" label="Agents" />
-        <NavButton href="/servers" label="MCP-Servers" />
-        <NavButton href="/tools" label="MCP-Tools (registered)" />
+        <NavButton href="/servers" label="MCP-Tool Registration" />
+        <NavButton href="/tools" label="Registered MCP-Tools" />
+        <NavButton href="/agents" label="Agent Configuration" />
         <NavButton href="/chat" label="Chat" />
       </nav>
     </aside>

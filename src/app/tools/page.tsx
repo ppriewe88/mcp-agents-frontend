@@ -1,6 +1,6 @@
 "use client";
 
-import styles from "./page.module.css";
+import { ListArea } from "@/ui/ListArea";
 import { useEffect, useState } from "react";
 import type { StoredItem } from "@/storage/storage";
 import type { ToolSchema } from "@/models/toolSchema";
@@ -80,17 +80,17 @@ export default function ToolsPage() {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header} />
+    <div className="container">
+      <div className="header" />
 
-      <div className={styles.listArea}>
+      <ListArea title="Registered MCP Tools">
         <ToolSchemasList
           tools={tools}
           isLoading={isLoading}
           loadError={loadError}
           onOpen={handleOpenEdit}
         />
-      </div>
+      </ListArea>
 
       {isModalOpen && modalToolSchema && (
         <ToolSchemaCreateOrEditModal

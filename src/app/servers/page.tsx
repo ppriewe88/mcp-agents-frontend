@@ -1,8 +1,8 @@
 "use client";
 
-import styles from "./page.module.css";
 import { useEffect, useState } from "react";
 import { AddButton } from "@/ui/AddButton";
+import { ListArea } from "@/ui/ListArea";
 import { ServerCreateModal } from "@/features/servers/ServerCreateModal";
 import type { MCPServer } from "@/models/mcpServer";
 import type { StoredItem } from "@/storage/storage";
@@ -114,15 +114,15 @@ export default function ServersPage() {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
+    <div className="container">
+      <div className="header">
         <AddButton
           onClick={handleAddServer}
           ariaLabel="Create new MCP server"
         />
       </div>
 
-      <div className={styles.listArea}>
+      <ListArea title="MCP Servers">
         <ServersList
           servers={servers}
           isLoading={isLoading}
@@ -130,16 +130,16 @@ export default function ServersPage() {
           toolLoadingById={toolLoadingById}
           onGetTools={handleGetTools}
         />
-      </div>
+      </ListArea>
 
-      <div className={styles.listArea}>
+      <ListArea title="MCP Tools">
         <ServerToolsList
           tools={tools}
           toolsError={toolsError}
           serverUrl={toolsServerUrl}
           onRegisterTool={handleRegisterTool}
         />
-      </div>
+      </ListArea>
 
       <ServerCreateModal
         isOpen={isCreateOpen}

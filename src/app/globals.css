@@ -85,6 +85,25 @@ a {
   background: #f9fafb;
 }
 
+/* grid, container and headers */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* add button */
 .addButton {
   width: 40px;
   height: 40px;
@@ -231,4 +250,28 @@ a {
   max-height: 400px;
   overflow-y: auto;
   padding-right: 8px;
+}
+
+.listArea {
+  min-height: 200px;
+  border: 1px dashed #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.listAreaHalf {
+  width: 50%;
+  border: 1px dashed #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 0;
+}
+
+.listAreaTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
 }
