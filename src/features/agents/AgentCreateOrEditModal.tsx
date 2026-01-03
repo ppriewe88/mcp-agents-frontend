@@ -10,6 +10,7 @@ import { Checkbox } from "@/ui/CheckBox";
 import type { Agent } from "@/models/agent";
 import { normalizeAgent, validateAgent } from "@/models/agent";
 import type { StoredItem } from "@/storage/storage";
+import { ToolBadge } from "@/ui/ToolBadge";
 
 type AgentCreateOrEditModalProps = {
   isOpen: boolean;
@@ -25,6 +26,10 @@ export function AgentCreateOrEditModal({
   onSubmit,
 }: AgentCreateOrEditModalProps) {
   const isEdit = Boolean(initialAgent);
+
+  const [assignedTools, setAssignedTools] = useState(
+    initialAgent?.toolSchemas ?? []
+  );
 
   // initialize state from initialAgent (edit) or defaults (create)
   const [name, setName] = useState(initialAgent?.name ?? "");
@@ -102,6 +107,7 @@ export function AgentCreateOrEditModal({
           : undefined,
         maxToolcalls: parsedMaxToolcalls,
         onlyOneModelCall,
+        toolSchemas: assignedTools,
       };
 
       const normalized = normalizeAgent(agent);
@@ -121,42 +127,51 @@ export function AgentCreateOrEditModal({
     onClose();
   };
 
+  const handleRemoveTool = (tool_id: string, container: string) => {
+    setAssignedTools((prev) =>
+      prev.filter((t) => !(t.tool_id === tool_id && t.container === container))
+    );
+  };
+
   return (
     <Modal
       isOpen={isOpen}
       title={isEdit ? "Edit Agent" : "Create Agent"}
       onClose={handleClose}
     >
-      <TextInput
-        label="Name"
-        value={name}
-        onChange={setName}
-        placeholder="e.g. Research Agent"
-      />
-      <TextInput
-        label="Description"
-        value={description}
-        onChange={setDescription}
-        placeholder="Short description"
-      />
-      <TextInput
-        label="Max toolcalls (optional)"
-        value={maxToolcalls}
-        onChange={setMaxToolcalls}
-        placeholder="e.g. 5"
-      />
-      <Checkbox
-        label="Only one model call"
-        checked={onlyOneModelCall}
-        onChange={setOnlyOneModelCall}
-      />
-      <Checkbox
-        label="Direct answers allowed"
-        checked={directAnswersAllowed}
-        onChange={setDirectAnswersAllowed}
-      />
+      <ScrollContainer title="Name">
+        <TextInput
+          value={name}
+          onChange={setName}
+          placeholder="e.g. Research Agent"
+        />
+      </ScrollContainer>
 
-      <ScrollContainer>
+      <ScrollContainer title="Description">
+        <TextInput
+          value={description}
+          onChange={setDescription}
+          placeholder="Short description"
+        />
+      </ScrollContainer>
+
+      <ScrollContainer title="Loop Behaviour, Prompts, Tools">
+        <TextInput
+          label="Max toolcalls (optional)"
+          value={maxToolcalls}
+          onChange={setMaxToolcalls}
+          placeholder="e.g. 5"
+        />
+        <Checkbox
+          label="Only one model call"
+          checked={onlyOneModelCall}
+          onChange={setOnlyOneModelCall}
+        />
+        <Checkbox
+          label="Direct answers allowed"
+          checked={directAnswersAllowed}
+          onChange={setDirectAnswersAllowed}
+        />
         <TextArea
           label="System prompt"
           value={systemPrompt}
@@ -185,6 +200,20 @@ export function AgentCreateOrEditModal({
           placeholder="Define the agent behavior for direct answers..."
           rows={8}
         />
+        <div className="formLabel">Assigned Tools</div>
+        {assignedTools.length > 0 ? (
+          <div className="toolBadges">
+            {assignedTools.map((tool) => (
+              <ToolBadge
+                key={`${tool.container}::${tool.tool_id}`}
+                tool={tool}
+                onRemove={() => handleRemoveTool(tool.tool_id, tool.container)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="formHint">No tools assigned yet.</div>
+        )}
       </ScrollContainer>
 
       {error && <div className="formError">{error}</div>}

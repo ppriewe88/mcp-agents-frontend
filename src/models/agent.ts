@@ -1,4 +1,4 @@
-import type { ToolSchema } from "./toolSchema";
+import type { ToolSchemaRef } from "@/models/toolSchema";
 
 export type Agent = {
   // required
@@ -19,7 +19,7 @@ export type Agent = {
   onlyOneModelCall?: boolean; // backend default: false
 
   // tool assignment (mirrors AgentRegistryEntry.tool_schemas)
-  toolSchemas?: ToolSchema[];
+  toolSchemas?: ToolSchemaRef[];
 };
 
 export function normalizeAgent(agent: Agent): Agent {

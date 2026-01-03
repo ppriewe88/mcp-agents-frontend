@@ -40,3 +40,13 @@ export type ToolSchema = {
   description_for_llm: string;
   args_schema: ToolArgsSchema;
 };
+
+/**
+ * Reference for drag and drop operations (i.e. adding tool to agent)
+ */
+export type ToolSchemaRef = {
+  tool_id: string; // StoredItem<ToolSchema>.id
+  container: string; // StoredItem<ToolSchema>.container (z.B. "toolschemas")
+  name_for_llm: string; // UI/Context
+  server_url: string; // UI/Context
+};

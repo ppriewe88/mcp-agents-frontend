@@ -13,7 +13,7 @@ import {
   saveAgent,
   updateAgent,
 } from "@/features/agents/agents.storage";
-import type { ToolSchema } from "@/models/toolSchema";
+import type { ToolSchema, ToolSchemaRef } from "@/models/toolSchema";
 import { loadToolSchemas } from "@/features/tools/toolschemas.storage";
 import { AgentsList } from "@/features/agents/AgentsList";
 import { DragToolSchemasList } from "@/features/tools/ToolSchemasDragList";
@@ -92,6 +92,36 @@ export default function AgentsPage() {
     setModalAgent(null);
   };
 
+  const handleDropToolSchema = async (
+    agent: StoredItem<Agent>,
+    toolRef: ToolSchemaRef
+  ) => {
+    try {
+      const existing = agent.toolSchemas ?? [];
+
+      const alreadyAssigned = existing.some(
+        (t) =>
+          t.tool_id === toolRef.tool_id && t.container === toolRef.container
+      );
+      if (alreadyAssigned) return;
+
+      const merged: StoredItem<Agent> = {
+        ...agent,
+        toolSchemas: [...existing, toolRef],
+        id: agent.id,
+        partitionKey: agent.partitionKey,
+        container: agent.container,
+      };
+
+      await updateAgent(merged);
+
+      const items = await loadAgents();
+      setAgents(items);
+    } catch (e) {
+      console.error("Failed to assign tool to agent:", e);
+    }
+  };
+
   return (
     <>
       <div className="container">
@@ -105,6 +135,7 @@ export default function AgentsPage() {
             isLoading={isLoading}
             loadError={loadError}
             onOpen={handleOpenAgentEdit}
+            onDropToolSchema={handleDropToolSchema}
           />
         </ListArea>
 

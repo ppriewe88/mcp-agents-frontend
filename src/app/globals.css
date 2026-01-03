@@ -246,10 +246,22 @@ a {
   padding-right: 6px; /* Platz für Scrollbar */
 }
 
+.scrollContainerWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scrollContainerTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
 .scrollContainer {
-  max-height: 400px;
+  max-height: 400px; /* falls vorhanden, sonst weglassen */
   overflow-y: auto;
-  padding-right: 8px;
+  padding-right: 4px; /* optional für Scrollbar-Abstand */
 }
 
 .listArea {
@@ -274,4 +286,55 @@ a {
   font-size: 14px;
   font-weight: 600;
   color: #374151;
+}
+
+.toolBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.toolBadge {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  max-width: 100%;
+}
+
+.toolBadgeText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toolBadgeName {
+  font-size: 12px;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.toolBadgeMeta {
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.2;
+  word-break: break-all;
+}
+
+.toolBadgeRemove {
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.toolBadgeRemove:hover {
+  color: #ef4444;
 }

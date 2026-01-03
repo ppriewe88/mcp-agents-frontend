@@ -3,7 +3,7 @@
 import styles from "@/app/tools/page.module.css";
 import { Card } from "@/ui/Card";
 import type { StoredItem } from "@/storage/storage";
-import type { ToolSchema } from "@/models/toolSchema";
+import type { ToolSchema, ToolSchemaRef } from "@/models/toolSchema";
 
 type Props = {
   tools: Array<StoredItem<ToolSchema>>;
@@ -19,7 +19,7 @@ export function DragToolSchemasList({ tools, isLoading, loadError }: Props) {
   return (
     <div className="grid">
       {tools.map((tool) => {
-        const payload = {
+        const payload: ToolSchemaRef = {
           tool_id: tool.id,
           container: tool.container,
           name_for_llm: tool.name_for_llm,
