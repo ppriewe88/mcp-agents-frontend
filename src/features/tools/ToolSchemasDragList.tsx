@@ -18,19 +18,35 @@ export function DragToolSchemasList({ tools, isLoading, loadError }: Props) {
 
   return (
     <div className="grid">
-      {tools.map((tool) => (
-        <Card
-          key={tool.id}
-          title={tool.name_for_llm}
-          dataId={tool.id}
-          dataContainer={tool.container}
-        >
-          <div className={styles.metaRow}>
-            <span className={styles.metaLabel}>Server:</span>
-            <span className={styles.metaValue}>{tool.server_url}</span>
-          </div>
-        </Card>
-      ))}
+      {tools.map((tool) => {
+        const payload = {
+          tool_id: tool.id,
+          container: tool.container,
+          name_for_llm: tool.name_for_llm,
+          server_url: tool.server_url,
+        };
+        return (
+          <Card
+            key={tool.id}
+            title={tool.name_for_llm}
+            dataId={tool.id}
+            dataContainer={tool.container}
+            draggable={true}
+            onDragStart={(e) => {
+              e.dataTransfer.effectAllowed = "copy";
+              e.dataTransfer.setData(
+                "application/x-mcp-toolschema-ref",
+                JSON.stringify(payload)
+              );
+            }}
+          >
+            <div className={styles.metaRow}>
+              <span className={styles.metaLabel}>Server:</span>
+              <span className={styles.metaValue}>{tool.server_url}</span>
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }
