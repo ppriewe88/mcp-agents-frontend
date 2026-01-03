@@ -44,6 +44,7 @@ export function Card({
       data-id={dataId}
       data-container={dataContainer}
       onClick={onClick}
+      title={title}
       role={onClick ? "button" : undefined}
       draggable={draggable}
       onDragStart={onDragStart}
