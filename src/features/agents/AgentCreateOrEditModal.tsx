@@ -206,7 +206,7 @@ export function AgentCreateOrEditModal({
             {assignedTools.map((tool) => (
               <ToolBadge
                 key={`${tool.container}::${tool.tool_id}`}
-                tool={tool}
+                toolRef={tool}
                 onRemove={() => handleRemoveTool(tool.tool_id, tool.container)}
               />
             ))}

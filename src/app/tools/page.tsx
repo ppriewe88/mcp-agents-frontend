@@ -81,8 +81,6 @@ export default function ToolsPage() {
 
   return (
     <div className="container">
-      <div className="header" />
-
       <ListArea title="Registered MCP Tools">
         <ToolSchemasList
           tools={tools}

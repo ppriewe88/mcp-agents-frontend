@@ -115,12 +115,7 @@ export default function ServersPage() {
 
   return (
     <div className="container">
-      <div className="header">
-        <AddButton
-          onClick={handleAddServer}
-          ariaLabel="Create new MCP server"
-        />
-      </div>
+      <AddButton onClick={handleAddServer} ariaLabel="Create new MCP server" />
 
       <ListArea title="MCP Servers">
         <ServersList

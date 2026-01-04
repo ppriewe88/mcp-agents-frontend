@@ -1,6 +1,5 @@
 "use client";
 
-import styles from "./page.module.css";
 import { useState, useEffect } from "react";
 import { AddButton } from "@/ui/AddButton";
 import { ListArea } from "@/ui/ListArea";
@@ -123,32 +122,28 @@ export default function AgentsPage() {
   };
 
   return (
-    <>
-      <div className="container">
-        <div className="container">
-          <AddButton onClick={handleAddAgent} ariaLabel="Create new agent" />
-        </div>
+    <div className="container">
+      <AddButton onClick={handleAddAgent} ariaLabel="Create new agent" />
 
-        <ListArea title="Agent Configurations">
-          <AgentsList
-            agents={agents}
-            isLoading={isLoading}
-            loadError={loadError}
-            onOpen={handleOpenAgentEdit}
-            onDropToolSchema={handleDropToolSchema}
-          />
-        </ListArea>
+      <ListArea title="Agent Configurations">
+        <AgentsList
+          agents={agents}
+          isLoading={isLoading}
+          loadError={loadError}
+          onOpen={handleOpenAgentEdit}
+          onDropToolSchema={handleDropToolSchema}
+        />
+      </ListArea>
 
-        {isModalOpen && (
-          <AgentCreateOrEditModal
-            key={modalAgent?.id ?? "create"}
-            isOpen={true}
-            initialAgent={modalAgent}
-            onClose={handleCloseModal}
-            onSubmit={handleSubmitCreateOrEdit}
-          />
-        )}
-      </div>
+      {isModalOpen && (
+        <AgentCreateOrEditModal
+          key={modalAgent?.id ?? "create"}
+          isOpen={true}
+          initialAgent={modalAgent}
+          onClose={handleCloseModal}
+          onSubmit={handleSubmitCreateOrEdit}
+        />
+      )}
 
       <div className="halfRowWrap">
         <ListAreaHalf title="Registered MCP-Tools">
@@ -163,6 +158,6 @@ export default function AgentsPage() {
           PLACEHOLDER FOR AGENTS AS TOOLS CARDS
         </ListAreaHalf>
       </div>
-    </>
+    </div>
   );
 }

@@ -1,26 +1,26 @@
 import type { ToolSchemaRef } from "@/models/toolSchema";
 
 type Props = {
-  tool: ToolSchemaRef;
+  toolRef: ToolSchemaRef;
   onRemove?: (tool: ToolSchemaRef) => void; // optional
 };
 
-export function ToolBadge({ tool, onRemove }: Props) {
+export function ToolBadge({ toolRef, onRemove }: Props) {
   return (
     <div
       className="toolBadge"
-      title={`${tool.name_for_llm} @ ${tool.server_url}`}
+      title={`${toolRef.name_for_llm} @ ${toolRef.server_url}`}
     >
       <div className="toolBadgeText">
-        <div className="toolBadgeName">{tool.name_for_llm}</div>
-        <div className="toolBadgeMeta">{tool.server_url}</div>
+        <div className="toolBadgeName">{toolRef.name_for_llm}</div>
+        <div className="toolBadgeMeta">{toolRef.server_url}</div>
       </div>
 
       {onRemove && (
         <button
           type="button"
           className="toolBadgeRemove"
-          onClick={() => onRemove(tool)}
+          onClick={() => onRemove(toolRef)}
           aria-label="Remove tool"
         >
           ×

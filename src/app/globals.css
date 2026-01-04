@@ -71,6 +71,10 @@
   --card-servertool-hover-bg: var(--card-server-hover-bg);
   --card-servertool-hover-border: var(--card-server-hover-bg);
 
+  /* Agent badge / card selected state */
+  --card-agent-selected-bg: rgba(17, 30, 216, 0.4);
+  --card-agent-selected-border: rgba(37, 100, 235, 0.945);
+
   /* Modal (single neutral style, opaque) */
   --modal-bg: #f3f4f6;
   --modal-border: #d1d5db;
@@ -490,6 +494,12 @@ a {
   box-shadow: var(--shadow-hover);
 }
 
+.listArea.compact {
+  min-height: unset;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
 .listAreaHalf {
   width: 50%;
   border: 1px dashed var(--color-border);
@@ -531,10 +541,15 @@ a {
   align-items: flex-start;
   gap: 8px;
   padding: 6px 10px;
+
   border: 1px solid var(--card-toolschema-border);
   border-radius: var(--radius-sm);
   background: var(--card-toolschema-bg);
-  max-width: 100%;
+
+  /* width: 100%; */
+  max-width: 180px;
+  min-width: 0;
+
   transition: background var(--transition-fast),
     box-shadow var(--transition-fast), transform var(--transition-fast),
     border-color var(--transition-fast);
@@ -551,6 +566,28 @@ a {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
+
+  overflow-wrap: anywhere;
+  word-break: break-all;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.toolBadgeName,
+.toolBadgeMeta {
+  min-width: 0;
+
+  overflow-wrap: anywhere;
+  word-break: break-all;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .toolBadgeName {
@@ -564,7 +601,6 @@ a {
   font-size: 11px;
   color: var(--color-muted);
   line-height: 1.2;
-  word-break: break-all;
 }
 
 .toolBadgeRemove {
@@ -584,6 +620,81 @@ a {
   background: var(--color-primary-hover);
   box-shadow: var(--shadow-hover);
   transform: translateY(var(--hover-tilt-y));
+}
+
+/* ################################## Agent badges ################################## */
+.agentBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.agentBadge {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 10px;
+
+  border: 1px solid var(--card-agent-border);
+  border-radius: var(--radius-sm);
+  background: var(--card-agent-bg);
+
+  /* width: 100%; */
+  max-width: 180px;
+  min-width: 0;
+
+  transition: background var(--transition-fast),
+    box-shadow var(--transition-fast), transform var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.agentBadge--selected {
+  background: var(--card-agent-selected-bg);
+  border-color: var(--card-agent-selected-border);
+}
+
+.agentBadge:hover {
+  background: var(--card-agent-hover-bg);
+  border-color: var(--card-agent-hover-border);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(var(--hover-tilt-y));
+}
+
+.agentBadge--selected:hover {
+  background: var(--card-agent-selected-bg);
+  border-color: var(--card-agent-selected-border);
+}
+
+.agentBadgeText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  overflow-wrap: anywhere;
+  word-break: break-all;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.agentBadgeName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-fg);
+  line-height: 1.2;
+
+  min-width: 0;
+
+  overflow-wrap: anywhere;
+  word-break: break-all;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ################################## special texts ################################## */

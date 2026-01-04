@@ -46,7 +46,7 @@ export type ToolSchema = {
  */
 export type ToolSchemaRef = {
   tool_id: string; // StoredItem<ToolSchema>.id
-  container: string; // StoredItem<ToolSchema>.container (z.B. "toolschemas")
+  container: string; // StoredItem<ToolSchema>.container (e.g. "toolschemas")
   name_for_llm: string; // UI/Context
   server_url: string; // UI/Context
 };

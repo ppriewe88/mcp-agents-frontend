@@ -56,3 +56,9 @@ export function validateAgent(agent: Agent): void {
     if (agent.maxToolcalls < 0) throw new Error("Max toolcalls must be >= 0.");
   }
 }
+
+export type AgentRef = {
+  agent_id: string; // StoredItem<Agent>.id
+  container: string; // StoredItem<Agent>.container (e.g. "agents")
+  name: string; // UI/Context
+};
