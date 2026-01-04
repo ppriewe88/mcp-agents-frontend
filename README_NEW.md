@@ -10,7 +10,7 @@ MCP-Servern
 
 persistierten Tools (ToolSchemas)
 
-und stellt eine klare, erweiterbare Administrationsoberfläche bereit.
+Zusätzlich wird eine Chat-Seite vorbereitet, auf der konfigurierte Agents ausgewählt und später ausgeführt werden können.
 
 Zentrale Ziele:
 
@@ -29,20 +29,20 @@ Sprache: TypeScript
 
 Persistenz: Azure Cosmos DB (ausschließlich serverseitig)
 
-Root: src/
+Root
+src/
 
 Aktuelle Struktur (relevant)
 src/
 ├─ app/
 │ ├─ agents/
-│ │ ├─ page.tsx
-│ │ └─ page.module.css
+│ │ └─ page.tsx
 │ ├─ servers/
-│ │ ├─ page.tsx
-│ │ └─ page.module.css
+│ │ └─ page.tsx
 │ ├─ tools/
-│ │ ├─ page.tsx
-│ │ └─ page.module.css
+│ │ └─ page.tsx
+│ ├─ chat/
+│ │ └─ page.tsx // Chat-Seite (Agent-Auswahl)
 │ ├─ api/
 │ │ └─ storage/[container]/route.ts // generische Cosmos-API
 │ ├─ layout.tsx
@@ -54,6 +54,8 @@ src/
 │ │ ├─ AgentCreateOrEditModal.tsx
 │ │ ├─ AgentsList.tsx
 │ │ └─ agents.storage.ts
+│ ├─ chat/
+│ │ └─ AgentBadgeList.tsx // Agent-Auswahl (Badges)
 │ ├─ servers/
 │ │ ├─ ServerCreateModal.tsx
 │ │ ├─ ServerList.tsx
@@ -78,9 +80,11 @@ src/
 │ └─ storage.ts // generischer Client-Storage
 │
 └─ ui/
+├─ AddButton.tsx
+├─ AgentBadge.tsx // klickbares & selektierbares Badge
 ├─ Button.tsx
 ├─ Card.tsx
-├─ ListArea.tsx
+├─ ListArea.tsx // erweitert um variant
 ├─ ListAreaHalf.tsx
 ├─ Modal.tsx
 ├─ ScrollContainer.tsx
@@ -112,7 +116,7 @@ Orchestrierungsebene
 
 hält Page-State (Listen, selektierte Items, Modal-Status)
 
-entscheidet über Create / Edit / Save / Reload
+entscheidet über Create / Edit / Save / Reload / Selection
 
 4. Persistenzarchitektur (Cosmos DB)
    4.1 Grundprinzip
@@ -167,7 +171,8 @@ servers.storage.ts
 
 ➡ Pages sprechen ausschließlich mit Feature-Wrappern.
 
-5. Card-Konzept (bindend)
+5. Card- und Badge-Konzepte (bindend)
+   5.1 Card-Konzept (Admin-Ansichten)
    type CardProps = {
    title: string;
    dataId: string;
@@ -178,9 +183,34 @@ servers.storage.ts
 
 dataContainer dient nur Debugging
 
-Aktionen arbeiten immer mit vollständigen StoredItems
+Aktionen arbeiten immer mit vollständigen StoredItem<T>
 
 Card-Klick → onOpen(storedItem)
+
+5.2 Badge-Konzept (Chat & Auswahl)
+AgentBadge (ui/AgentBadge.tsx)
+
+visuelle Darstellung eines AgentRef
+
+optional klickbar (onClick)
+
+optional selektierbar (selected)
+
+keine Persistenzlogik
+
+kein Wrapper-DIV notwendig
+
+AgentBadgeList (features/chat/AgentBadgeList.tsx)
+
+rendert eine kompakte Badge-Leiste
+
+kapselt Loading / Error / Empty-State
+
+ruft onSelect(StoredItem<Agent>) bei Klick
+
+bestimmt Selected-State über Vergleich:
+
+selectedAgent?.id === agent.id
 
 6. Fachliche Domänen
    6.1 Agents
@@ -196,7 +226,9 @@ List ✔
 
 Edit ✔
 
-Tool-Zuweisung ✔ (neu)
+Tool-Zuweisung ✔
+
+Chat-Selektion ✔
 
 Edit-Flow:
 
@@ -206,11 +238,9 @@ Edit-Modal nur gemountet, wenn Item existiert
 
 Save: Patch → Merge → updateAgent → Reload
 
-Tool-Zuweisung (neu)
+Tool-Zuweisung:
 
 Agents speichern keine vollständigen ToolSchemas, sondern Referenzen.
-
-Referenztyp:
 
 type ToolSchemaRef = {
 tool_id: string;
@@ -244,7 +274,9 @@ nicht persistiert
 6.3.2 Persistierte Tools (ToolSchema)
 
 Page: /tools
+
 Persistenz: Cosmos (toolschemas)
+
 Modell: toolSchema.ts
 
 7. ToolSchema Create & Edit (bindend)
@@ -254,8 +286,6 @@ Einheitliches Modal:
 ToolSchemaCreateOrEditModal
 
 ersetzt Create- und Edit-Modals
-
-Unterscheidung:
 
 initialToolSchema?: StoredItem<ToolSchema> | null
 
@@ -283,14 +313,14 @@ reloadet Liste
 
 ➡ exakt gleiches Muster wie bei Agents.
 
-8. ToolSchema ↔ Agent-Verknüpfung (neu)
+8. ToolSchema ↔ Agent-Verknüpfung
    8.1 UI-Struktur
 
-Auf der AgentsPage existiert eine separate Tool-Liste
+AgentsPage enthält separate Tool-Liste
 
 Komponente: ToolSchemasDragList
 
-Darstellung: reduzierte Mini-Cards
+reduzierte Mini-Cards
 
 Zweck: Auswahl & Zuordnung, keine Verwaltung
 
@@ -310,39 +340,97 @@ Persistenz via updateAgent
 
 Reload der Agent-Liste
 
-Duplikate werden verhindert.
+Duplikate werden verhindert
 
 8.3 Anzeige & Edit
 
 Agent-Edit-Modal zeigt zugewiesene Tools als ToolBadges
 
-Entfernen von Tools:
-
-lokal im Modal
+Entfernen lokal im Modal
 
 Persistenz nur bei Save
 
 Modal schließen ohne Save verwirft Änderungen
 
-9. Datenflüsse
-   Lesen
-   Page → Feature-Storage → Client-Storage → API → Cosmos
+9. Chat-Page (neu)
+
+Page: /chat
+
+Zweck:
+
+Auswahl eines konfigurierten Agents
+
+Vorbereitung für agentbasierten Chat
+
+spätere Tool-Auflösung & Agent-Execution
+
+UI-Struktur:
+
+obere, kompakte ListArea (variant="compact")
+
+AgentBadgeList als horizontale Badge-Leiste
+
+Selected-Agent visuell hervorgehoben
+
+ListArea-Erweiterung:
+
+variant?: "default" | "compact"
+
+compact entfernt Mindesthöhe für Ribbon-artige Nutzung
+
+State-Modell:
+
+selectedAgent: StoredItem<Agent> | null
+
+vollständiger Agent inkl. id bleibt im State
+
+UI-Highlighting über selectedAgent.id
+
+reiner Agent kann beim Fetch abgeleitet werden
+
+10. Datenflüsse
+    Lesen
+    Page
+    → Feature-Storage
+    → Client-Storage
+    → API
+    → Cosmos
 
 Create
-Modal → Page(onSubmit) → saveXxx → POST → Cosmos → Reload
+Modal
+→ Page(onSubmit)
+→ saveXxx
+→ POST
+→ Cosmos
+→ Reload
 
 Edit
-Card → Page-State → Modal → Patch → Merge → updateXxx → PUT → Reload
+Card
+→ Page-State
+→ Modal
+→ Patch
+→ Merge
+→ updateXxx
+→ PUT
+→ Reload
 
 Tool-Zuweisung
-DragToolSchemasList
+ToolSchemasDragList
 → Drag ToolSchemaRef
 → Drop auf Agent-Card
 → Merge in Agent
 → updateAgent
 → Reload
 
-10. Mentales Arbeitsmodell (bindend)
+Agent-Auswahl (Chat)
+ChatPage
+→ AgentBadgeList
+→ AgentBadge(onClick)
+→ setSelectedAgent(StoredItem<Agent>)
+→ visuelles Highlighting
+→ später: Fetch(selectedAgent)
+
+11. Mentales Arbeitsmodell (bindend)
 
 schrittweise
 
@@ -356,7 +444,7 @@ dann UI-Wiring
 
 Persistenzänderungen vor neuen Features
 
-11. Aktueller Status
+12. Aktueller Status
 
 Agent Create / Edit ✔
 
@@ -368,17 +456,23 @@ Persistenz der Tool-Referenzen ✔
 
 Anzeige & Entfernen im Agent-Modal ✔
 
+Chat-Agent-Auswahl ✔
+
+Selected-State & visuelles Feedback ✔
+
 Architektur konsistent ✔
 
-12. Nächste logische Schritte
+13. Nächste logische Schritte
 
-Anzeige zugewiesener Tools direkt auf Agent-Cards
+Chat-Button & Fetch-Flow mit selectedAgent
 
-visuelles Drag-Over-Feedback
+serverseitige Tool-Auflösung aus toolSchemas
 
-optional: Entfernen direkt aus der Agent-Card
+Agent-Execution-Endpoint
 
-danach: Agent-basierte Chat-Page inkl. Tool-Auflösung
+optionale Tastaturnavigation / Deselect-Logik
 
-Status-Fazit:
-Das Projekt verfügt nun über eine konsistente, skalierbare Administrationsarchitektur inklusive robuster Agent↔ToolSchema-Verknüpfung. Neue Features lassen sich mechanisch und ohne Refactor-Zwang entlang etablierter Muster ergänzen.
+Status-Fazit
+
+Das Projekt verfügt nun über eine konsistente, skalierbare Administrations- und Auswahlarchitektur, die Konfiguration und Interaktion (Chat) sauber vorbereitet.
+Neue Features lassen sich mechanisch und ohne Refactor-Zwang entlang etablierter Muster ergänzen.
