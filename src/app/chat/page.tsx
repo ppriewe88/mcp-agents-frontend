@@ -6,6 +6,7 @@ import { loadAgents } from "@/features/agents/agents.storage";
 import type { StoredItem } from "@/storage/storage";
 import type { Agent } from "@/models/agent";
 import { AgentBadgeList } from "@/features/chat/AgentBadgeList";
+import { invokeAgent } from "@/features/chat/chat.invoke";
 
 export default function ChatPage() {
   const [agents, setAgents] = useState<Array<StoredItem<Agent>>>([]);
@@ -53,6 +54,27 @@ export default function ChatPage() {
           selectedAgent={selectedAgent}
         />
       </ListArea>
+
+      {/* ############################### minimal test invoke UI */}
+      <div className="mt-4 space-y-2">
+        <input
+          type="text"
+          value="Hello from ChatPage test message"
+          readOnly
+          className="w-full px-2 py-1 border rounded text-sm"
+        />
+
+        <button
+          type="button"
+          onClick={() => {
+            if (!selectedAgent) return;
+            invokeAgent(selectedAgent, "Hello from ChatPage test message");
+          }}
+          className="px-3 py-2 border rounded text-sm"
+        >
+          Invoke agent
+        </button>
+      </div>
     </div>
   );
 }
