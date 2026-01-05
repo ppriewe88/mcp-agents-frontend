@@ -2,7 +2,7 @@
 
 import { ListArea } from "@/ui/ListArea";
 import { useEffect, useState } from "react";
-import type { StoredItem } from "@/storage/storage";
+import type { StoredItem } from "@/storage/operations";
 import type { ToolSchema } from "@/models/toolSchema";
 import {
   loadToolSchemas,

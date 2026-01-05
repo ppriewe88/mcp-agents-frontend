@@ -2,7 +2,7 @@
 
 import styles from "@/app/tools/page.module.css";
 import { Card } from "@/ui/Card";
-import type { StoredItem } from "@/storage/storage";
+import type { StoredItem } from "@/storage/operations";
 import type { ToolSchema, ToolSchemaRef } from "@/models/toolSchema";
 
 type Props = {

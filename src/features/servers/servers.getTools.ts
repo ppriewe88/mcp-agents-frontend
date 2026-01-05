@@ -1,5 +1,5 @@
 import type { MCPServer } from "@/models/mcpServer";
-import type { StoredItem } from "@/storage/storage";
+import type { StoredItem } from "@/storage/operations";
 import type { ServerTool } from "@/models/mcpServerTool";
 import { normalizeTool, validateTool } from "@/models/mcpServerTool";
 

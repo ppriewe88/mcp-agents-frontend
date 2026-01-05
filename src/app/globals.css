@@ -707,3 +707,65 @@ a {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ################################## chat ################################## */
+.chatArea {
+  height: 600px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 8px;
+
+  overflow-y: auto;
+  background-color: #fafafa;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chatMessage {
+  max-width: 75%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* User message: right aligned */
+.chatMessage.fromUser {
+  align-self: flex-end;
+  background-color: #dbeafe; /* light blue */
+  border-top-right-radius: 2px;
+}
+
+/* AI message: left aligned */
+.chatMessage.fromAi {
+  align-self: flex-start;
+  background-color: #e5e7eb; /* light gray */
+  border-top-left-radius: 2px;
+}
+
+.chatSendoff {
+  margin-top: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px;
+  background-color: #ffffff;
+}
+
+.chatSendoffRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.chatSendoffInput {
+  flex: 1;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+}

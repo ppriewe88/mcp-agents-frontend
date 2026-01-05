@@ -6,7 +6,7 @@ import { ListArea } from "@/ui/ListArea";
 import { ListAreaHalf } from "@/ui/ListAreaHalf";
 import { AgentCreateOrEditModal } from "@/features/agents/AgentCreateOrEditModal";
 import type { Agent } from "@/models/agent";
-import type { StoredItem } from "@/storage/storage";
+import type { StoredItem } from "@/storage/operations";
 import {
   loadAgents,
   saveAgent,

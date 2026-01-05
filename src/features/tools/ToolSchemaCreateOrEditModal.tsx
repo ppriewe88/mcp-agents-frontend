@@ -5,7 +5,7 @@ import { Modal } from "@/ui/Modal";
 import { Button } from "@/ui/Button";
 import { TextInput } from "@/ui/TextInput";
 import { TextArea } from "@/ui/TextArea";
-import type { StoredItem } from "@/storage/storage";
+import type { StoredItem } from "@/storage/operations";
 import type { ServerTool } from "@/models/mcpServerTool";
 import type { ToolSchema, ToolArg } from "@/models/toolSchema";
 import {
@@ -13,6 +13,7 @@ import {
   parseDefaultValue,
   normalizeToolSchema,
   validateToolSchema,
+  sanitizeToolNameForLlm,
 } from "@/features/tools/toolschemas.utils";
 
 type Props = {
@@ -368,7 +369,7 @@ export function ToolSchemaCreateOrEditModal({
               <TextInput
                 label="Tool name (for llm)"
                 value={nameForLlm}
-                onChange={setNameForLlm}
+                onChange={(v) => setNameForLlm(sanitizeToolNameForLlm(v))}
                 placeholder="e.g. add_numbers"
               />
             </div>

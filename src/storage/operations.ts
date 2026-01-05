@@ -54,3 +54,22 @@ export async function updateItemInContainer<TSchema>(
 
   return (await res.json()) as StoredItem<TSchema>;
 }
+
+export async function loadItemById<TSchema>(
+  container: string,
+  id: string
+): Promise<StoredItem<TSchema>> {
+  const res = await fetch(
+    `/api/storage/${container}?id=${encodeURIComponent(id)}`,
+    { method: "GET" }
+  );
+
+  if (!res.ok) {
+    const msg = await res.text().catch(() => "");
+    throw new Error(
+      `Load by id failed (${res.status}): ${msg || res.statusText}`
+    );
+  }
+
+  return (await res.json()) as StoredItem<TSchema>;
+}

@@ -4,7 +4,7 @@ import {
   loadItems,
   updateItemInContainer,
   type StoredItem,
-} from "@/storage/storage";
+} from "@/storage/operations";
 
 const CONTAINER = "agents";
 

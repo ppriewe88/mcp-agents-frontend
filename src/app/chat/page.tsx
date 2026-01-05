@@ -1,19 +1,31 @@
 "use client";
 
 import { ListArea } from "@/ui/ListArea";
+import { ChatSendoff } from "@/features/chat/ChatSendoff";
+import { ChatArea } from "@/features/chat/ChatArea";
+import { ChatMessage } from "@/features/chat/ChatMessage";
 import { useState, useEffect } from "react";
+import type { ToolSchema } from "@/models/toolSchema";
+import { loadToolSchemaByRef } from "@/features/tools/toolschemas.storage";
 import { loadAgents } from "@/features/agents/agents.storage";
-import type { StoredItem } from "@/storage/storage";
+import type { StoredItem } from "@/storage/operations";
 import type { Agent } from "@/models/agent";
+import { ChatMessageModel } from "@/models/chatMessage";
 import { AgentBadgeList } from "@/features/chat/AgentBadgeList";
 import { invokeAgent } from "@/features/chat/chat.invoke";
 
 export default function ChatPage() {
   const [agents, setAgents] = useState<Array<StoredItem<Agent>>>([]);
+  const [messages, setMessages] = useState<Array<ChatMessageModel>>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<StoredItem<Agent> | null>(
     null
+  );
+  const [toolsLoading, setToolsLoading] = useState(false);
+  const [toolsError, setToolsError] = useState<string | null>(null);
+  const [selectedToolSchemas, setSelectedToolSchemas] = useState<ToolSchema[]>(
+    []
   );
 
   useEffect(() => {
@@ -39,8 +51,71 @@ export default function ChatPage() {
     };
   }, []);
 
-  const handleSelectAgent = (stored: StoredItem<Agent>) => {
+  const handleSelectAgent = async (stored: StoredItem<Agent>) => {
     setSelectedAgent(stored);
+
+    setToolsLoading(true);
+    setToolsError(null);
+    setSelectedToolSchemas([]);
+
+    try {
+      const refs = stored.toolSchemas ?? [];
+      if (refs.length === 0) {
+        setSelectedToolSchemas([]);
+        return;
+      }
+
+      const storedTools = await Promise.all(
+        refs.map((r) => loadToolSchemaByRef(r))
+      );
+
+      const tools = storedTools.map(
+        ({ id: _id, partitionKey: _pk, container: _c, ...tool }) => tool
+      );
+
+      setSelectedToolSchemas(tools);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to load tools.";
+      setToolsError(msg);
+      setSelectedToolSchemas([]);
+    } finally {
+      setToolsLoading(false);
+    }
+  };
+
+  const sendMessage = async (text: string) => {
+    if (!selectedAgent) return;
+
+    const userId = crypto.randomUUID();
+    const aiId = crypto.randomUUID();
+
+    setMessages((prev) => [
+      ...prev,
+      { id: userId, role: "user", content: text },
+      { id: aiId, role: "ai", content: "" },
+    ]);
+
+    try {
+      await invokeAgent({
+        message: text,
+        agent: selectedAgent,
+        toolSchemas: selectedToolSchemas,
+        renderChunk: (appendText) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === aiId ? { ...m, content: m.content + appendText } : m
+            )
+          );
+        },
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Stream failed.";
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === aiId ? { ...m, content: `Error: ${msg}` } : m
+        )
+      );
+    }
   };
 
   return (
@@ -55,26 +130,21 @@ export default function ChatPage() {
         />
       </ListArea>
 
-      {/* ############################### minimal test invoke UI */}
-      <div className="mt-4 space-y-2">
-        <input
-          type="text"
-          value="Hello from ChatPage test message"
-          readOnly
-          className="w-full px-2 py-1 border rounded text-sm"
-        />
+      <ChatArea>
+        <ChatMessage role="ai">HALLO</ChatMessage>
+        <ChatArea>
+          {messages.map((m) => (
+            <ChatMessage key={m.id} role={m.role}>
+              {m.content}
+            </ChatMessage>
+          ))}
+        </ChatArea>
+      </ChatArea>
 
-        <button
-          type="button"
-          onClick={() => {
-            if (!selectedAgent) return;
-            invokeAgent(selectedAgent, "Hello from ChatPage test message");
-          }}
-          className="px-3 py-2 border rounded text-sm"
-        >
-          Invoke agent
-        </button>
-      </div>
+      <ChatSendoff
+        disabled={!selectedAgent || toolsLoading || !!toolsError}
+        onSend={sendMessage}
+      />
     </div>
   );
 }

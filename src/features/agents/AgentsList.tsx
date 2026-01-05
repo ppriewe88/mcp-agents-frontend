@@ -1,6 +1,6 @@
 "use client";
 import type { Agent } from "@/models/agent";
-import type { StoredItem } from "@/storage/storage";
+import type { StoredItem } from "@/storage/operations";
 import { Card } from "@/ui/Card";
 import type { ToolSchemaRef } from "@/models/toolSchema";
 

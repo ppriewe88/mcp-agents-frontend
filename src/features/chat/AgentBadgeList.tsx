@@ -1,6 +1,6 @@
 "use client";
 import type { Agent, AgentRef } from "@/models/agent";
-import type { StoredItem } from "@/storage/storage";
+import type { StoredItem } from "@/storage/operations";
 import { AgentBadge } from "@/ui/AgentBadge";
 
 type AgentBadgeListProps = {

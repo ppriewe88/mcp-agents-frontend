@@ -9,7 +9,7 @@ import { Button } from "@/ui/Button";
 import { Checkbox } from "@/ui/CheckBox";
 import type { Agent } from "@/models/agent";
 import { normalizeAgent, validateAgent } from "@/models/agent";
-import type { StoredItem } from "@/storage/storage";
+import type { StoredItem } from "@/storage/operations";
 import { ToolBadge } from "@/ui/ToolBadge";
 
 type AgentCreateOrEditModalProps = {

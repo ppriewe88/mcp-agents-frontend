@@ -1,7 +1,7 @@
 "use client";
 
 import type { MCPServer } from "@/models/mcpServer";
-import type { StoredItem } from "@/storage/storage";
+import type { StoredItem } from "@/storage/operations";
 import { Card } from "@/ui/Card";
 import { Button } from "@/ui/Button";
 

@@ -5,7 +5,7 @@ import { AddButton } from "@/ui/AddButton";
 import { ListArea } from "@/ui/ListArea";
 import { ServerCreateModal } from "@/features/servers/ServerCreateModal";
 import type { MCPServer } from "@/models/mcpServer";
-import type { StoredItem } from "@/storage/storage";
+import type { StoredItem } from "@/storage/operations";
 import { loadServers, saveServer } from "@/features/servers/servers.storage";
 import { listTools, parseTools } from "@/features/servers/servers.getTools";
 import type { ServerTool } from "@/models/mcpServerTool";

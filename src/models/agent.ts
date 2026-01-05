@@ -3,9 +3,9 @@ import type { ToolSchemaRef } from "@/models/toolSchema";
 export type Agent = {
   // required
   name: string;
+  description: string; // backend default: ""
   systemPrompt: string;
   directAnswerValidationPrompt: string;
-  description: string; // backend default: ""
 
   // optional / with defaults (backend-aligned)
   directAnswersAllowed?: boolean; // backend default: true
