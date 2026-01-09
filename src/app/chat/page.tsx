@@ -14,21 +14,48 @@ import { ChatMessageModel } from "@/models/chatMessage";
 import { AgentBadgeList } from "@/features/chat/AgentBadgeList";
 import { invokeAgent } from "@/features/chat/chat.invoke";
 
+
+const BACKEND_AGENTS_MODE = true;
+
+const FAKE_AGENT: StoredItem<Agent> = {
+  id: "debug-agent",
+  partitionKey: "debug-agent",
+  container: "agents",
+  name: "DebugAgent",
+  description: "Debug agent (local dummy) to test backend streaming/invoke.",
+  systemPrompt: "You are a helpful assistant for debugging. Respond succinctly.",
+  directAnswerValidationPrompt: "Direct answer is always usable.",
+  directAnswersAllowed: true,
+  onlyOneModelCall: false,
+  toolSchemas: [] // keep empty unless you want to test tool wiring
+};
+
 export default function ChatPage() {
   const [agents, setAgents] = useState<Array<StoredItem<Agent>>>([]);
   const [messages, setMessages] = useState<Array<ChatMessageModel>>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<StoredItem<Agent> | null>(
-    null
-  );
+  const [selectedAgent, setSelectedAgent] = useState<StoredItem<Agent> | null>(null);
   const [toolsLoading, setToolsLoading] = useState(false);
   const [toolsError, setToolsError] = useState<string | null>(null);
-  const [selectedToolSchemas, setSelectedToolSchemas] = useState<ToolSchema[]>(
-    []
-  );
+  const [selectedToolSchemas, setSelectedToolSchemas] = useState<ToolSchema[]>([]);
+
+  // ############################################ START FAKE STUFF
+  useEffect(() => {
+    if (!BACKEND_AGENTS_MODE) return;
+
+    setSelectedAgent(FAKE_AGENT);
+    setSelectedToolSchemas([]);
+    setToolsError(null);
+    setToolsLoading(false);
+  }, []);
+  // ############################################ END FAKE STUFF
 
   useEffect(() => {
+    // ############################################ START FAKE STUFF
+    if (BACKEND_AGENTS_MODE) return;
+    // ############################################ END FAKE STUFF
+
     let cancelled = false;
 
     const run = async () => {
@@ -52,6 +79,10 @@ export default function ChatPage() {
   }, []);
 
   const handleSelectAgent = async (stored: StoredItem<Agent>) => {
+    // ############################################ START FAKE STUFF
+    if (BACKEND_AGENTS_MODE) return;
+    // ############################################ END FAKE STUFF
+
     setSelectedAgent(stored);
 
     setToolsLoading(true);
@@ -65,13 +96,9 @@ export default function ChatPage() {
         return;
       }
 
-      const storedTools = await Promise.all(
-        refs.map((r) => loadToolSchemaByRef(r))
-      );
+      const storedTools = await Promise.all(refs.map((r) => loadToolSchemaByRef(r)));
 
-      const tools = storedTools.map(
-        ({ id: _id, partitionKey: _pk, container: _c, ...tool }) => tool
-      );
+      const tools = storedTools.map(({ id: _id, partitionKey: _pk, container: _c, ...tool }) => tool);
 
       setSelectedToolSchemas(tools);
     } catch (e) {
@@ -89,11 +116,7 @@ export default function ChatPage() {
     const userId = crypto.randomUUID();
     const aiId = crypto.randomUUID();
 
-    setMessages((prev) => [
-      ...prev,
-      { id: userId, role: "user", content: text },
-      { id: aiId, role: "ai", content: "" },
-    ]);
+    setMessages((prev) => [...prev, { id: userId, role: "user", content: text }, { id: aiId, role: "ai", content: "" }]);
 
     try {
       await invokeAgent({
@@ -101,34 +124,24 @@ export default function ChatPage() {
         agent: selectedAgent,
         toolSchemas: selectedToolSchemas,
         renderChunk: (appendText) => {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === aiId ? { ...m, content: m.content + appendText } : m
-            )
-          );
-        },
+          setMessages((prev) => prev.map((m) => (m.id === aiId ? { ...m, content: m.content + appendText } : m)));
+        }
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Stream failed.";
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === aiId ? { ...m, content: `Error: ${msg}` } : m
-        )
-      );
+      setMessages((prev) => prev.map((m) => (m.id === aiId ? { ...m, content: `Error: ${msg}` } : m)));
     }
   };
 
   return (
     <div className="container">
-      <ListArea title="Available Agents" variant="compact">
-        <AgentBadgeList
-          agents={agents}
-          isLoading={isLoading}
-          loadError={loadError}
-          onSelect={handleSelectAgent}
-          selectedAgent={selectedAgent}
-        />
-      </ListArea>
+      {/* // ############################################ START FAKE STUFF */}
+      {!BACKEND_AGENTS_MODE && (
+        <ListArea title="Available Agents" variant="compact">
+          <AgentBadgeList agents={agents} isLoading={isLoading} loadError={loadError} onSelect={handleSelectAgent} selectedAgent={selectedAgent} />
+        </ListArea>
+      )}
+      {/* // ############################################ START FAKE STUFF */}
 
       <ChatArea>
         <ChatMessage role="ai">HALLO</ChatMessage>
@@ -141,10 +154,9 @@ export default function ChatPage() {
         </ChatArea>
       </ChatArea>
 
-      <ChatSendoff
-        disabled={!selectedAgent || toolsLoading || !!toolsError}
-        onSend={sendMessage}
-      />
+      {/* // ############################################ START FAKE STUFF */}
+      <ChatSendoff disabled={BACKEND_AGENTS_MODE ? false : !selectedAgent || toolsLoading || !!toolsError} onSend={sendMessage} />
+      {/* // ############################################ START FAKE STUFF */}
     </div>
   );
 }
