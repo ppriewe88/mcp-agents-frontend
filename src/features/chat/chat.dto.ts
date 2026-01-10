@@ -1,6 +1,7 @@
 import type { Agent } from "@/models/agent";
 import type { ToolSchema } from "@/models/toolSchema";
 import { isEmptyDefault } from "@/features/tools/toolschemas.utils";
+import { ChatMessageModel } from "@/models/chatMessage";
 
 type AgentConfigDto = {
   name: string;
@@ -40,7 +41,7 @@ type ToolSchemaDto = {
 };
 
 export type StreamAgentRequestDTO = {
-  message: string;
+  messages: Array<ChatMessageModel>;
   agent_config: AgentConfigDto;
   tool_schemas: ToolSchemaDto[];
 };
