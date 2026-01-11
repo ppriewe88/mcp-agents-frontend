@@ -25,7 +25,6 @@ const FAKE_AGENT: StoredItem<Agent> = {
   systemPrompt:
     "You are a helpful assistant for debugging. Respond succinctly.",
   directAnswerValidationPrompt: "Direct answer is always usable.",
-  directAnswersAllowed: true,
   onlyOneModelCall: false,
   toolSchemas: [], // keep empty unless you want to test tool wiring
 };

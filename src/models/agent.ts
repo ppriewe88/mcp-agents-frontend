@@ -7,9 +7,6 @@ export type Agent = {
   systemPrompt: string;
   directAnswerValidationPrompt: string;
 
-  // optional / with defaults (backend-aligned)
-  directAnswersAllowed?: boolean; // backend default: true
-
   // optional prompts
   directAnswerPrompt?: string; // backend Optional[str]
   toolbasedAnswerPrompt?: string; // backend Optional[str]
@@ -28,7 +25,6 @@ export function normalizeAgent(agent: Agent): Agent {
     description: agent.description.trim(),
     systemPrompt: agent.systemPrompt.trim(),
     directAnswerValidationPrompt: agent.directAnswerValidationPrompt.trim(),
-    directAnswersAllowed: agent.directAnswersAllowed ?? true,
     directAnswerPrompt: agent.directAnswerPrompt?.trim(),
     toolbasedAnswerPrompt: agent.toolbasedAnswerPrompt?.trim(),
     maxToolcalls: agent.maxToolcalls,

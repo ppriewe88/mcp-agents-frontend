@@ -42,10 +42,6 @@ export function AgentCreateOrEditModal({
   const [directAnswerValidationPrompt, setDirectAnswerValidationPrompt] =
     useState(initialAgent?.directAnswerValidationPrompt ?? "");
 
-  const [directAnswersAllowed, setDirectAnswersAllowed] = useState<boolean>(
-    initialAgent?.directAnswersAllowed ?? true
-  );
-
   const [directAnswerPrompt, setDirectAnswerPrompt] = useState(
     initialAgent?.directAnswerPrompt ?? ""
   );
@@ -80,7 +76,6 @@ export function AgentCreateOrEditModal({
     setDescription("");
     setSystemPrompt("");
     setDirectAnswerValidationPrompt("");
-    setDirectAnswersAllowed(true);
     setDirectAnswerPrompt("");
     setToolbasedAnswerPrompt("");
     setMaxToolcalls("");
@@ -98,7 +93,6 @@ export function AgentCreateOrEditModal({
         description,
         systemPrompt,
         directAnswerValidationPrompt,
-        directAnswersAllowed,
         directAnswerPrompt: directAnswerPrompt.trim().length
           ? directAnswerPrompt
           : undefined,
@@ -166,11 +160,6 @@ export function AgentCreateOrEditModal({
           label="Only one model call"
           checked={onlyOneModelCall}
           onChange={setOnlyOneModelCall}
-        />
-        <Checkbox
-          label="Direct answers allowed"
-          checked={directAnswersAllowed}
-          onChange={setDirectAnswersAllowed}
         />
         <TextArea
           label="System prompt"

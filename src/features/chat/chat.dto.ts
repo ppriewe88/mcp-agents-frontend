@@ -8,7 +8,6 @@ type AgentConfigDto = {
   description?: string; // optional, backend default ""
   system_prompt: string;
   directanswer_validation_sysprompt: string;
-  directanswer_allowed?: boolean; // backend default True
   direct_answer_prompt?: string | null;
   toolbased_answer_prompt?: string | null;
   max_toolcalls?: number | null;
@@ -55,7 +54,6 @@ export function toAgentConfigDto(frontendAgent: Agent): AgentConfigDto {
     directanswer_validation_sysprompt:
       frontendAgent.directAnswerValidationPrompt,
 
-    directanswer_allowed: frontendAgent.directAnswersAllowed ?? true,
     direct_answer_prompt: frontendAgent.directAnswerPrompt ?? null,
     toolbased_answer_prompt: frontendAgent.toolbasedAnswerPrompt ?? null,
 
