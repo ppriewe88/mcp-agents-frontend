@@ -5,10 +5,10 @@ export type Agent = {
   name: string;
   description: string; // backend default: ""
   systemPrompt: string;
-  directAnswerValidationPrompt: string;
 
   // optional prompts
   directAnswerPrompt?: string; // backend Optional[str]
+  directAnswerValidationPrompt?: string;
   toolbasedAnswerPrompt?: string; // backend Optional[str]
 
   // optional controls
@@ -24,7 +24,7 @@ export function normalizeAgent(agent: Agent): Agent {
     name: agent.name.trim(),
     description: agent.description.trim(),
     systemPrompt: agent.systemPrompt.trim(),
-    directAnswerValidationPrompt: agent.directAnswerValidationPrompt.trim(),
+    directAnswerValidationPrompt: agent.directAnswerValidationPrompt?.trim(),
     directAnswerPrompt: agent.directAnswerPrompt?.trim(),
     toolbasedAnswerPrompt: agent.toolbasedAnswerPrompt?.trim(),
     maxToolcalls: agent.maxToolcalls,
@@ -42,9 +42,6 @@ export function validateAgent(agent: Agent): void {
 
   if (agent.systemPrompt.trim().length === 0)
     throw new Error("System prompt must not be empty.");
-
-  if (agent.directAnswerValidationPrompt.trim().length === 0)
-    throw new Error("Direct answer validation prompt must not be empty.");
 
   if (agent.maxToolcalls !== undefined) {
     if (!Number.isInteger(agent.maxToolcalls))

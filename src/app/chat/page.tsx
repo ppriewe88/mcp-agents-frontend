@@ -14,7 +14,7 @@ import { ChatMessageModel } from "@/models/chatMessage";
 import { AgentBadgeList } from "@/features/chat/AgentBadgeList";
 import { invokeAgent } from "@/features/chat/chat.invoke";
 
-const BACKEND_AGENTS_MODE = true;
+const BACKEND_AGENTS_MODE = false;
 
 const FAKE_AGENT: StoredItem<Agent> = {
   id: "debug-agent",

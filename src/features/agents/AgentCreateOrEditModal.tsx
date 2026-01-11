@@ -183,7 +183,7 @@ export function AgentCreateOrEditModal({
           rows={6}
         />
         <TextArea
-          label="Direct Answer Validation Prompt"
+          label="Direct Answer Validation Prompt (optional)"
           value={directAnswerValidationPrompt}
           onChange={setDirectAnswerValidationPrompt}
           placeholder="Define the agent behavior for direct answers..."
