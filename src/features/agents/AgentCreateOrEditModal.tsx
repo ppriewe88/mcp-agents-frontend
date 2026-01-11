@@ -66,10 +66,9 @@ export function AgentCreateOrEditModal({
     return (
       name.trim().length > 0 &&
       description.trim().length > 0 &&
-      systemPrompt.trim().length > 0 &&
-      directAnswerValidationPrompt.trim().length > 0
+      systemPrompt.trim().length > 0
     );
-  }, [name, description, systemPrompt, directAnswerValidationPrompt]);
+  }, [name, description, systemPrompt]);
 
   const resetForm = () => {
     setName("");
