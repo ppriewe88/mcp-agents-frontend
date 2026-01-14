@@ -1,12 +1,14 @@
-export type StreamControlResult = {
-  appendText?: string; // was in die UI soll (optional)
-  // später: flags wie { log?: boolean, type?: "token"|"event", ... }
-};
+export type StreamChunk =
+  | { type: "text_step"; data: string }
+  | { type: "text_final"; data: string };
 
-export function streamControl(chunk: string): StreamControlResult {
-  // Beispiel: loggen, aber 1:1 durchreichen
-  // (später kannst du hier chunkweise filtern/umformen/event-parsen)
-  console.log("streamControl:", chunk);
+export type StreamControlResult =
+  | { kind: "step"; text: string }
+  | { kind: "final"; text: string }
+  | { kind: "ignore" };
 
-  return { appendText: chunk };
+export function streamControl(chunk: StreamChunk): StreamControlResult {
+  if (chunk.type === "text_step") return { kind: "step", text: chunk.data };
+  if (chunk.type === "text_final") return { kind: "final", text: chunk.data };
+  return { kind: "ignore" };
 }

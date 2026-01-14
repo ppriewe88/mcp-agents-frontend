@@ -14,7 +14,7 @@ import { ChatMessageModel } from "@/models/chatMessage";
 import { AgentBadgeList } from "@/features/chat/AgentBadgeList";
 import { invokeAgent } from "@/features/chat/chat.invoke";
 
-const BACKEND_AGENTS_MODE = false;
+const BACKEND_AGENTS_MODE = true;
 
 const FAKE_AGENT: StoredItem<Agent> = {
   id: "debug-agent",
@@ -140,12 +140,15 @@ export default function ChatPage() {
         messages: sentMessages,
         agent: selectedAgent,
         toolSchemas: selectedToolSchemas,
-        renderChunk: (appendText) => {
+        onFinalText: (appendText) => {
           setMessages((prev) =>
             prev.map((m) =>
               m.id === aiId ? { ...m, content: m.content + appendText } : m
             )
           );
+        },
+        onStep: (item) => {
+          console.log("[STEP]", item.text);
         },
       });
     } catch (e) {
