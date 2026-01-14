@@ -26,7 +26,7 @@ const FAKE_AGENT: StoredItem<Agent> = {
     "You are a helpful assistant for debugging. Respond succinctly.",
   directAnswerValidationPrompt: "Direct answer is always usable.",
   onlyOneModelCall: false,
-  toolSchemas: [], // keep empty unless you want to test tool wiring
+  toolSchemas: [],
 };
 
 export default function ChatPage() {
