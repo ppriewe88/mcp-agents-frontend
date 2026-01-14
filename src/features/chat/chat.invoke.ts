@@ -4,24 +4,25 @@ import { streamControl } from "@/features/chat/streamControl";
 import type { StreamAgentRequestDTO } from "@/features/chat/chat.dto";
 import type { ToolSchema } from "@/models/toolSchema";
 import { toAgentConfigDto, toToolSchemaDto } from "@/features/chat/chat.dto";
+import { ChatMessageModel } from "@/models/chatMessage";
 
 type InvokeAgentArgs = {
   renderChunk: (appendText: string) => void;
-  message: string;
+  messages: Array<ChatMessageModel>;
   agent: StoredItem<Agent>;
   toolSchemas: ToolSchema[];
 };
 
 export async function invokeAgent({
   renderChunk,
-  message,
+  messages,
   agent,
   toolSchemas,
 }: InvokeAgentArgs): Promise<void> {
   const url = "http://127.0.0.1:3001/stream-test";
 
   const payload: StreamAgentRequestDTO = {
-    message,
+    messages,
     agent_config: toAgentConfigDto(agent),
     tool_schemas: toolSchemas.map(toToolSchemaDto),
   };

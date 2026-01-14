@@ -22,7 +22,9 @@ export default function AgentsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalAgent, setModalAgent] = useState<StoredItem<Agent> | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<StoredItem<Agent> | null>(
+    null
+  );
   const [tools, setTools] = useState<Array<StoredItem<ToolSchema>>>([]);
 
   useEffect(() => {
@@ -51,33 +53,33 @@ export default function AgentsPage() {
   }, []);
 
   const handleAddAgent = () => {
-    setModalAgent(null);
+    setSelectedAgent(null);
     setIsModalOpen(true);
   };
 
   const handleOpenAgentEdit = (agent: StoredItem<Agent>) => {
-    setModalAgent(agent);
+    setSelectedAgent(agent);
     setIsModalOpen(true);
   };
 
   const handleSubmitCreateOrEdit = async (agent: Agent) => {
     try {
-      if (modalAgent === null) {
+      if (selectedAgent === null) {
         await saveAgent(agent);
       } else {
         const merged: StoredItem<Agent> = {
-          ...modalAgent,
+          ...selectedAgent,
           ...agent,
-          id: modalAgent.id,
-          partitionKey: modalAgent.partitionKey,
-          container: modalAgent.container,
+          id: selectedAgent.id,
+          partitionKey: selectedAgent.partitionKey,
+          container: selectedAgent.container,
         };
 
         await updateAgent(merged);
       }
 
       setIsModalOpen(false);
-      setModalAgent(null);
+      setSelectedAgent(null);
 
       const items = await loadAgents();
       setAgents(items);
@@ -88,7 +90,7 @@ export default function AgentsPage() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setModalAgent(null);
+    setSelectedAgent(null);
   };
 
   const handleDropToolSchema = async (
@@ -137,9 +139,9 @@ export default function AgentsPage() {
 
       {isModalOpen && (
         <AgentCreateOrEditModal
-          key={modalAgent?.id ?? "create"}
+          key={selectedAgent?.id ?? "create"}
           isOpen={true}
-          initialAgent={modalAgent}
+          initialAgent={selectedAgent}
           onClose={handleCloseModal}
           onSubmit={handleSubmitCreateOrEdit}
         />

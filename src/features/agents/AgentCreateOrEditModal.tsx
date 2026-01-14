@@ -42,10 +42,6 @@ export function AgentCreateOrEditModal({
   const [directAnswerValidationPrompt, setDirectAnswerValidationPrompt] =
     useState(initialAgent?.directAnswerValidationPrompt ?? "");
 
-  const [directAnswersAllowed, setDirectAnswersAllowed] = useState<boolean>(
-    initialAgent?.directAnswersAllowed ?? true
-  );
-
   const [directAnswerPrompt, setDirectAnswerPrompt] = useState(
     initialAgent?.directAnswerPrompt ?? ""
   );
@@ -70,17 +66,15 @@ export function AgentCreateOrEditModal({
     return (
       name.trim().length > 0 &&
       description.trim().length > 0 &&
-      systemPrompt.trim().length > 0 &&
-      directAnswerValidationPrompt.trim().length > 0
+      systemPrompt.trim().length > 0
     );
-  }, [name, description, systemPrompt, directAnswerValidationPrompt]);
+  }, [name, description, systemPrompt]);
 
   const resetForm = () => {
     setName("");
     setDescription("");
     setSystemPrompt("");
     setDirectAnswerValidationPrompt("");
-    setDirectAnswersAllowed(true);
     setDirectAnswerPrompt("");
     setToolbasedAnswerPrompt("");
     setMaxToolcalls("");
@@ -98,7 +92,6 @@ export function AgentCreateOrEditModal({
         description,
         systemPrompt,
         directAnswerValidationPrompt,
-        directAnswersAllowed,
         directAnswerPrompt: directAnswerPrompt.trim().length
           ? directAnswerPrompt
           : undefined,
@@ -167,11 +160,6 @@ export function AgentCreateOrEditModal({
           checked={onlyOneModelCall}
           onChange={setOnlyOneModelCall}
         />
-        <Checkbox
-          label="Direct answers allowed"
-          checked={directAnswersAllowed}
-          onChange={setDirectAnswersAllowed}
-        />
         <TextArea
           label="System prompt"
           value={systemPrompt}
@@ -194,7 +182,7 @@ export function AgentCreateOrEditModal({
           rows={6}
         />
         <TextArea
-          label="Direct Answer Validation Prompt"
+          label="Direct Answer Validation Prompt (optional)"
           value={directAnswerValidationPrompt}
           onChange={setDirectAnswerValidationPrompt}
           placeholder="Define the agent behavior for direct answers..."

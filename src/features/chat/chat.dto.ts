@@ -1,13 +1,13 @@
 import type { Agent } from "@/models/agent";
 import type { ToolSchema } from "@/models/toolSchema";
 import { isEmptyDefault } from "@/features/tools/toolschemas.utils";
+import { ChatMessageModel } from "@/models/chatMessage";
 
 type AgentConfigDto = {
   name: string;
   description?: string; // optional, backend default ""
   system_prompt: string;
-  directanswer_validation_sysprompt: string;
-  directanswer_allowed?: boolean; // backend default True
+  directanswer_validation_sysprompt?: string | null; // optional, not expected in backend
   direct_answer_prompt?: string | null;
   toolbased_answer_prompt?: string | null;
   max_toolcalls?: number | null;
@@ -40,7 +40,7 @@ type ToolSchemaDto = {
 };
 
 export type StreamAgentRequestDTO = {
-  message: string;
+  messages: Array<ChatMessageModel>;
   agent_config: AgentConfigDto;
   tool_schemas: ToolSchemaDto[];
 };
@@ -52,9 +52,8 @@ export function toAgentConfigDto(frontendAgent: Agent): AgentConfigDto {
 
     system_prompt: frontendAgent.systemPrompt,
     directanswer_validation_sysprompt:
-      frontendAgent.directAnswerValidationPrompt,
+      frontendAgent.directAnswerValidationPrompt ?? null,
 
-    directanswer_allowed: frontendAgent.directAnswersAllowed ?? true,
     direct_answer_prompt: frontendAgent.directAnswerPrompt ?? null,
     toolbased_answer_prompt: frontendAgent.toolbasedAnswerPrompt ?? null,
 

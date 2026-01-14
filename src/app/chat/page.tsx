@@ -14,8 +14,7 @@ import { ChatMessageModel } from "@/models/chatMessage";
 import { AgentBadgeList } from "@/features/chat/AgentBadgeList";
 import { invokeAgent } from "@/features/chat/chat.invoke";
 
-
-const BACKEND_AGENTS_MODE = true;
+const BACKEND_AGENTS_MODE = false;
 
 const FAKE_AGENT: StoredItem<Agent> = {
   id: "debug-agent",
@@ -23,11 +22,11 @@ const FAKE_AGENT: StoredItem<Agent> = {
   container: "agents",
   name: "DebugAgent",
   description: "Debug agent (local dummy) to test backend streaming/invoke.",
-  systemPrompt: "You are a helpful assistant for debugging. Respond succinctly.",
+  systemPrompt:
+    "You are a helpful assistant for debugging. Respond succinctly.",
   directAnswerValidationPrompt: "Direct answer is always usable.",
-  directAnswersAllowed: true,
   onlyOneModelCall: false,
-  toolSchemas: [] // keep empty unless you want to test tool wiring
+  toolSchemas: [],
 };
 
 export default function ChatPage() {
@@ -35,12 +34,16 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Array<ChatMessageModel>>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<StoredItem<Agent> | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<StoredItem<Agent> | null>(
+    null
+  );
   const [toolsLoading, setToolsLoading] = useState(false);
   const [toolsError, setToolsError] = useState<string | null>(null);
-  const [selectedToolSchemas, setSelectedToolSchemas] = useState<ToolSchema[]>([]);
+  const [selectedToolSchemas, setSelectedToolSchemas] = useState<ToolSchema[]>(
+    []
+  );
 
-  // ############################################ START FAKE STUFF
+  // ############################################ USEEFFECT FOR FAKE AGENT [REMOVE ENTIRELY LATER] ---------> LOAD FAKE AGENT
   useEffect(() => {
     if (!BACKEND_AGENTS_MODE) return;
 
@@ -49,8 +52,8 @@ export default function ChatPage() {
     setToolsError(null);
     setToolsLoading(false);
   }, []);
-  // ############################################ END FAKE STUFF
 
+  // ############################################ USEEFFECT FOR AGENT LOADING
   useEffect(() => {
     // ############################################ START FAKE STUFF
     if (BACKEND_AGENTS_MODE) return;
@@ -78,6 +81,7 @@ export default function ChatPage() {
     };
   }, []);
 
+  // ############################################ SELECTION OF AGENT, LOADING OF ASSOCIATED TOOLS
   const handleSelectAgent = async (stored: StoredItem<Agent>) => {
     // ############################################ START FAKE STUFF
     if (BACKEND_AGENTS_MODE) return;
@@ -96,9 +100,13 @@ export default function ChatPage() {
         return;
       }
 
-      const storedTools = await Promise.all(refs.map((r) => loadToolSchemaByRef(r)));
+      const storedTools = await Promise.all(
+        refs.map((r) => loadToolSchemaByRef(r))
+      );
 
-      const tools = storedTools.map(({ id: _id, partitionKey: _pk, container: _c, ...tool }) => tool);
+      const tools = storedTools.map(
+        ({ id: _id, partitionKey: _pk, container: _c, ...tool }) => tool
+      );
 
       setSelectedToolSchemas(tools);
     } catch (e) {
@@ -110,26 +118,43 @@ export default function ChatPage() {
     }
   };
 
+  // ############################################ SENDING MESSAGES [INVOKE AND STREAM]
   const sendMessage = async (text: string) => {
     if (!selectedAgent) return;
 
     const userId = crypto.randomUUID();
     const aiId = crypto.randomUUID();
 
-    setMessages((prev) => [...prev, { id: userId, role: "user", content: text }, { id: aiId, role: "ai", content: "" }]);
+    const userMsg: ChatMessageModel = {
+      id: userId,
+      role: "user",
+      content: text,
+    };
+    const aiMsg: ChatMessageModel = { id: aiId, role: "ai", content: "" };
+    const nextMessages = [...messages, userMsg, aiMsg];
+    const sentMessages = [...messages, userMsg];
+    setMessages(nextMessages);
 
     try {
       await invokeAgent({
-        message: text,
+        messages: sentMessages,
         agent: selectedAgent,
         toolSchemas: selectedToolSchemas,
         renderChunk: (appendText) => {
-          setMessages((prev) => prev.map((m) => (m.id === aiId ? { ...m, content: m.content + appendText } : m)));
-        }
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === aiId ? { ...m, content: m.content + appendText } : m
+            )
+          );
+        },
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Stream failed.";
-      setMessages((prev) => prev.map((m) => (m.id === aiId ? { ...m, content: `Error: ${msg}` } : m)));
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === aiId ? { ...m, content: `Error: ${msg}` } : m
+        )
+      );
     }
   };
 
@@ -138,7 +163,13 @@ export default function ChatPage() {
       {/* // ############################################ START FAKE STUFF */}
       {!BACKEND_AGENTS_MODE && (
         <ListArea title="Available Agents" variant="compact">
-          <AgentBadgeList agents={agents} isLoading={isLoading} loadError={loadError} onSelect={handleSelectAgent} selectedAgent={selectedAgent} />
+          <AgentBadgeList
+            agents={agents}
+            isLoading={isLoading}
+            loadError={loadError}
+            onSelect={handleSelectAgent}
+            selectedAgent={selectedAgent}
+          />
         </ListArea>
       )}
       {/* // ############################################ START FAKE STUFF */}
@@ -155,7 +186,14 @@ export default function ChatPage() {
       </ChatArea>
 
       {/* // ############################################ START FAKE STUFF */}
-      <ChatSendoff disabled={BACKEND_AGENTS_MODE ? false : !selectedAgent || toolsLoading || !!toolsError} onSend={sendMessage} />
+      <ChatSendoff
+        disabled={
+          BACKEND_AGENTS_MODE
+            ? false
+            : !selectedAgent || toolsLoading || !!toolsError
+        }
+        onSend={sendMessage}
+      />
       {/* // ############################################ START FAKE STUFF */}
     </div>
   );
