@@ -14,7 +14,7 @@ import { ChatMessageModel } from "@/models/chatMessage";
 import { AgentBadgeList } from "@/features/chat/AgentBadgeList";
 import { invokeAgent } from "@/features/chat/chat.invoke";
 
-const BACKEND_AGENTS_MODE = true;
+const BACKEND_AGENTS_MODE = false;
 
 const FAKE_AGENT: StoredItem<Agent> = {
   id: "debug-agent",
@@ -35,12 +35,12 @@ export default function ChatPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<StoredItem<Agent> | null>(
-    null
+    null,
   );
   const [toolsLoading, setToolsLoading] = useState(false);
   const [toolsError, setToolsError] = useState<string | null>(null);
   const [selectedToolSchemas, setSelectedToolSchemas] = useState<ToolSchema[]>(
-    []
+    [],
   );
 
   // ############################################ USEEFFECT FOR FAKE AGENT [REMOVE ENTIRELY LATER] ---------> LOAD FAKE AGENT
@@ -101,11 +101,11 @@ export default function ChatPage() {
       }
 
       const storedTools = await Promise.all(
-        refs.map((r) => loadToolSchemaByRef(r))
+        refs.map((r) => loadToolSchemaByRef(r)),
       );
 
       const tools = storedTools.map(
-        ({ id: _id, partitionKey: _pk, container: _c, ...tool }) => tool
+        ({ id: _id, partitionKey: _pk, container: _c, ...tool }) => tool,
       );
 
       setSelectedToolSchemas(tools);
@@ -143,8 +143,8 @@ export default function ChatPage() {
         onFinalText: (appendText) => {
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === aiId ? { ...m, content: m.content + appendText } : m
-            )
+              m.id === aiId ? { ...m, content: m.content + appendText } : m,
+            ),
           );
         },
         onStep: (item) => {
@@ -155,8 +155,8 @@ export default function ChatPage() {
       const msg = e instanceof Error ? e.message : "Stream failed.";
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === aiId ? { ...m, content: `Error: ${msg}` } : m
-        )
+          m.id === aiId ? { ...m, content: `Error: ${msg}` } : m,
+        ),
       );
     }
   };
