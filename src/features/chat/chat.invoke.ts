@@ -22,8 +22,9 @@ type InvokeAgentArgs = {
 };
 
 type NdjsonChunk = {
-  type?: unknown;
+  type?: string;
   data?: unknown;
+  level?: string;
 };
 
 function makeStepItem(text: string): StepItem {
@@ -57,7 +58,7 @@ export async function invokeAgent({
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
     throw new Error(
-      `HTTP ${res.status} ${res.statusText}${errText ? `: ${errText}` : ""}`
+      `HTTP ${res.status} ${res.statusText}${errText ? `: ${errText}` : ""}`,
     );
   }
   if (!res.body) {
@@ -95,13 +96,14 @@ export async function invokeAgent({
 
       // minimal validation
       const type = msg?.type;
+      const level = msg?.level;
       const data = msg?.data;
       if (typeof type !== "string" || typeof data !== "string") {
         continue; // MVP: ignore unknown/untyped chunks
       }
 
       // central routing
-      const action = streamControl({ type, data } as StreamChunk);
+      const action = streamControl({ type, level, data } as StreamChunk);
 
       if (action.kind === "final") {
         onFinalText(action.text);

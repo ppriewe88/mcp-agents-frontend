@@ -1,7 +1,19 @@
 export type StreamChunk =
-  | { type: "text_step"; data: string }
-  | { type: "outer_tool_result"; data: string }
-  | { type: "text_final"; data: string };
+  | {
+      level: "outer_agent" | "inner_agent";
+      type: "text_step";
+      data: string;
+    }
+  | {
+      level: "outer_agent" | "inner_agent";
+      type: "text_final";
+      data: string;
+    }
+  | {
+      level: "outer_agent" | "inner_agent";
+      type: "tool_results";
+      data: string;
+    };
 
 export type StreamControlResult =
   | { kind: "step"; text: string }
@@ -10,8 +22,8 @@ export type StreamControlResult =
 
 export function streamControl(chunk: StreamChunk): StreamControlResult {
   if (chunk.type === "text_step") return { kind: "step", text: chunk.data };
-  if (chunk.type === "outer_tool_result")
-    return { kind: "step", text: chunk.data };
-  if (chunk.type === "text_final") return { kind: "final", text: chunk.data };
+  if (chunk.type === "tool_results") return { kind: "step", text: chunk.data };
+  if (chunk.type === "text_final" && chunk.level === "outer_agent")
+    return { kind: "final", text: chunk.data };
   return { kind: "ignore" };
 }
