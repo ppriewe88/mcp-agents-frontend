@@ -1,14 +1,15 @@
 import type { StoredItem } from "@/storage/operations";
 import type { Agent } from "@/models/agent";
 import { streamControl } from "@/features/chat/streamControl";
-import type { StreamChunk } from "@/features/chat/streamControl";
+import type { StreamChunk, StreamControlResult } from "@/features/chat/streamControl";
 import type { StreamAgentRequestDTO } from "@/features/chat/chat.dto";
 import type { ToolSchema } from "@/models/toolSchema";
 import { toAgentConfigDto, toToolSchemaDto } from "@/features/chat/chat.dto";
 import { ChatMessageModel } from "@/models/chatMessage";
 
-type StepItem = {
+export type StepItem = {
   id: string;
+  level: "outer_agent" | "inner_agent";
   kind: "step";
   text: string; // erstmal nur Textanzeige, später strukturierter
 };
@@ -27,39 +28,31 @@ type NdjsonChunk = {
   level?: string;
 };
 
-function makeStepItem(text: string): StepItem {
-  return { id: crypto.randomUUID(), kind: "step", text };
+function makeStepItem(result: Extract<StreamControlResult, { kind: "step" }>): StepItem {
+  return { id: crypto.randomUUID(), kind: "step", level: result.level, text: result.text };
 }
 
-export async function invokeAgent({
-  onFinalText,
-  onStep,
-  messages,
-  agent,
-  toolSchemas,
-}: InvokeAgentArgs): Promise<void> {
+export async function invokeAgent({ onFinalText, onStep, messages, agent, toolSchemas }: InvokeAgentArgs): Promise<void> {
   const url = "http://127.0.0.1:3001/stream-test";
 
   const payload: StreamAgentRequestDTO = {
     messages,
     agent_config: toAgentConfigDto(agent),
-    tool_schemas: toolSchemas.map(toToolSchemaDto),
+    tool_schemas: toolSchemas.map(toToolSchemaDto)
   };
 
   const res = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Accept: "application/x-ndjson",
+      Accept: "application/x-ndjson"
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(payload)
   });
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
-    throw new Error(
-      `HTTP ${res.status} ${res.statusText}${errText ? `: ${errText}` : ""}`,
-    );
+    throw new Error(`HTTP ${res.status} ${res.statusText}${errText ? `: ${errText}` : ""}`);
   }
   if (!res.body) {
     throw new Error("No response body (stream not supported).");
@@ -69,6 +62,7 @@ export async function invokeAgent({
   const decoder = new TextDecoder("utf-8");
 
   let buffer = "";
+  let outerFinalBuffer = "";
 
   while (true) {
     const { value, done } = await reader.read();
@@ -105,12 +99,19 @@ export async function invokeAgent({
       // central routing
       const action = streamControl({ type, level, data } as StreamChunk);
 
-      if (action.kind === "final") {
+      if (action.kind === "outer_final") {
         onFinalText(action.text);
+        outerFinalBuffer += action.text; // accumulate outer final answer for thread
+      } else if (action.kind === "inner_final") {
+        onStep(makeStepItem({ kind: "step", text: action.text, level: "inner_agent" }));
       } else if (action.kind === "step") {
-        // Dummy handling can live in caller; here we pass it through:
-        onStep(makeStepItem(action.text));
+        onStep(makeStepItem(action));
       }
     }
+  }
+
+  // After stream: send accumulated outer final message to AgentThread
+  if (outerFinalBuffer) {
+    onStep(makeStepItem({ kind: "step", text: outerFinalBuffer, level: "outer_agent" }));
   }
 }
