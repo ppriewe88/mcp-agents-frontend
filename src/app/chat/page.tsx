@@ -13,6 +13,8 @@ import type { Agent } from "@/models/agent";
 import { ChatMessageModel } from "@/models/chatMessage";
 import { AgentBadgeList } from "@/features/chat/AgentBadgeList";
 import { invokeAgent } from "@/features/chat/chat.invoke";
+import { AgentThread } from "@/features/chat/AgentThread";
+import type { StepItem } from "@/features/chat/chat.invoke";
 
 const BACKEND_AGENTS_MODE = false;
 
@@ -22,26 +24,24 @@ const FAKE_AGENT: StoredItem<Agent> = {
   container: "agents",
   name: "DebugAgent",
   description: "Debug agent (local dummy) to test backend streaming/invoke.",
-  systemPrompt:
-    "You are a helpful assistant for debugging. Respond succinctly.",
+  systemPrompt: "You are a helpful assistant for debugging. Respond succinctly.",
   directAnswerValidationPrompt: "Direct answer is always usable.",
   onlyOneModelCall: false,
-  toolSchemas: [],
+  toolSchemas: []
 };
+
+type ThreadItem = StepItem | { kind: "separator"; id: string };
 
 export default function ChatPage() {
   const [agents, setAgents] = useState<Array<StoredItem<Agent>>>([]);
   const [messages, setMessages] = useState<Array<ChatMessageModel>>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<StoredItem<Agent> | null>(
-    null,
-  );
+  const [selectedAgent, setSelectedAgent] = useState<StoredItem<Agent> | null>(null);
   const [toolsLoading, setToolsLoading] = useState(false);
   const [toolsError, setToolsError] = useState<string | null>(null);
-  const [selectedToolSchemas, setSelectedToolSchemas] = useState<ToolSchema[]>(
-    [],
-  );
+  const [selectedToolSchemas, setSelectedToolSchemas] = useState<ToolSchema[]>([]);
+  const [threadItems, setThreadItems] = useState<ThreadItem[]>([]);
 
   // ############################################ USEEFFECT FOR FAKE AGENT [REMOVE ENTIRELY LATER] ---------> LOAD FAKE AGENT
   useEffect(() => {
@@ -100,13 +100,9 @@ export default function ChatPage() {
         return;
       }
 
-      const storedTools = await Promise.all(
-        refs.map((r) => loadToolSchemaByRef(r)),
-      );
+      const storedTools = await Promise.all(refs.map((r) => loadToolSchemaByRef(r)));
 
-      const tools = storedTools.map(
-        ({ id: _id, partitionKey: _pk, container: _c, ...tool }) => tool,
-      );
+      const tools = storedTools.map(({ id: _id, partitionKey: _pk, container: _c, ...tool }) => tool);
 
       setSelectedToolSchemas(tools);
     } catch (e) {
@@ -128,12 +124,13 @@ export default function ChatPage() {
     const userMsg: ChatMessageModel = {
       id: userId,
       role: "user",
-      content: text,
+      content: text
     };
     const aiMsg: ChatMessageModel = { id: aiId, role: "ai", content: "" };
     const nextMessages = [...messages, userMsg, aiMsg];
     const sentMessages = [...messages, userMsg];
     setMessages(nextMessages);
+    setThreadItems((prev) => [...prev, { kind: "separator", id: crypto.randomUUID() }]);
 
     try {
       await invokeAgent({
@@ -141,63 +138,47 @@ export default function ChatPage() {
         agent: selectedAgent,
         toolSchemas: selectedToolSchemas,
         onFinalText: (appendText) => {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === aiId ? { ...m, content: m.content + appendText } : m,
-            ),
-          );
+          setMessages((prev) => prev.map((m) => (m.id === aiId ? { ...m, content: m.content + appendText } : m)));
         },
         onStep: (item) => {
           console.log("[STEP]", item.text);
-        },
+          setThreadItems((prev) => [...prev, item]);
+        }
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Stream failed.";
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === aiId ? { ...m, content: `Error: ${msg}` } : m,
-        ),
-      );
+      setMessages((prev) => prev.map((m) => (m.id === aiId ? { ...m, content: `Error: ${msg}` } : m)));
     }
   };
 
   return (
-    <div className="container">
-      {/* // ############################################ START FAKE STUFF */}
-      {!BACKEND_AGENTS_MODE && (
-        <ListArea title="Available Agents" variant="compact">
-          <AgentBadgeList
-            agents={agents}
-            isLoading={isLoading}
-            loadError={loadError}
-            onSelect={handleSelectAgent}
-            selectedAgent={selectedAgent}
-          />
-        </ListArea>
-      )}
-      {/* // ############################################ START FAKE STUFF */}
+    <div className="chatPageLayout">
+      <div className="chatPageMain">
+        {/* // ############################################ START FAKE STUFF */}
+        {!BACKEND_AGENTS_MODE && (
+          <ListArea title="Available Agents" variant="compact">
+            <AgentBadgeList agents={agents} isLoading={isLoading} loadError={loadError} onSelect={handleSelectAgent} selectedAgent={selectedAgent} />
+          </ListArea>
+        )}
+        {/* // ############################################ START FAKE STUFF */}
 
-      <ChatArea>
-        <ChatMessage role="ai">HALLO</ChatMessage>
         <ChatArea>
-          {messages.map((m) => (
-            <ChatMessage key={m.id} role={m.role}>
-              {m.content}
-            </ChatMessage>
-          ))}
+          <ChatMessage role="ai">HALLO</ChatMessage>
+          <ChatArea>
+            {messages.map((m) => (
+              <ChatMessage key={m.id} role={m.role}>
+                {m.content}
+              </ChatMessage>
+            ))}
+          </ChatArea>
         </ChatArea>
-      </ChatArea>
 
-      {/* // ############################################ START FAKE STUFF */}
-      <ChatSendoff
-        disabled={
-          BACKEND_AGENTS_MODE
-            ? false
-            : !selectedAgent || toolsLoading || !!toolsError
-        }
-        onSend={sendMessage}
-      />
-      {/* // ############################################ START FAKE STUFF */}
+        {/* // ############################################ START FAKE STUFF */}
+        <ChatSendoff disabled={BACKEND_AGENTS_MODE ? false : !selectedAgent || toolsLoading || !!toolsError} onSend={sendMessage} />
+        {/* // ############################################ START FAKE STUFF */}
+      </div>
+
+      <AgentThread items={threadItems} />
     </div>
   );
 }
