@@ -476,3 +476,34 @@ Status-Fazit
 
 Das Projekt verfügt nun über eine konsistente, skalierbare Administrations- und Auswahlarchitektur, die Konfiguration und Interaktion (Chat) sauber vorbereitet.
 Neue Features lassen sich mechanisch und ohne Refactor-Zwang entlang etablierter Muster ergänzen.
+
+########## ERGÄNZUNG zum Thema Streaming:
+invokeAgent sendet per fetch einen POST an den FastAPI-Endpoint und liest die Response als NDJSON-Stream (application/x-ndjson) über res.body.getReader() + TextDecoder.
+
+Der Stream wird über einen buffer zeilenweise (Delimiter \n) in vollständige JSON-Records zerlegt; jede Zeile wird geparst zu { type, data }.
+
+Die zentrale Routing-Logik liegt in streamControl(StreamChunk): Dort wird anhand von type entschieden, ob ein Chunk als finaler Text oder als Step/Arbeitschritt behandelt wird (und später: Tool-/Tabellenpakete).
+
+invokeAgent verteilt anschließend auf zwei getrennte Handler:
+
+onFinalText(appendText: string) aktualisiert die Chat-Message (AI) durch Append in setMessages (wie bisher).
+
+onStep(item: StepItem) ist der Einstiegspunkt für nicht-finale Chunks; aktuell kann er loggen, später wird er UI-Elemente/Boxen in einer Step-Liste anlegen (reihenfolgegetreu, append-only).
+
+Typisch sind Discriminated-Unions als Basistypen: StreamChunk (eingehende Stream-Chunks) und StepItem (UI-nahe Repräsentation für Steps). Das Design erlaubt später ohne API-Bruch zusätzliche Chunk-Typen (z. B. tool_result_table) und reichere UI-Payloads.
+
+To-dos
+
+StreamChunk zu einer vollständigen Discriminated Union ausbauen (z. B. text_step, text_final, tool_result, tool_request, …).
+
+streamControl erweitern, sodass es nicht nur Text weiterreicht, sondern für neue Typen strukturierte StepItems mit Metadaten (Label, Icon, Payload) erzeugt.
+
+Einen dedizierten State für Step-Items (z. B. steps: StepItem[]) in der Page einführen und in onStep append-only pflegen.
+
+UI-Komponenten für Step-Items bauen (Boxen/Liste), die anhand von kind oder payload unterschiedliche Darstellungen rendern (Text, Tabelle, Download-Button, etc.).
+
+Optionale Token-Koaleszenz: mehrere text_step-Chunks zu einer Step-Box zusammenführen, um UI-Rauschen zu vermeiden.
+
+Fehler- und Abbruch-Chunks (aborted, etc.) visuell differenziert darstellen.
+
+Type Guards für Stream-Chunks ergänzen, um any vollständig zu vermeiden

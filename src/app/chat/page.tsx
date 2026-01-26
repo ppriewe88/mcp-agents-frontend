@@ -35,12 +35,12 @@ export default function ChatPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<StoredItem<Agent> | null>(
-    null
+    null,
   );
   const [toolsLoading, setToolsLoading] = useState(false);
   const [toolsError, setToolsError] = useState<string | null>(null);
   const [selectedToolSchemas, setSelectedToolSchemas] = useState<ToolSchema[]>(
-    []
+    [],
   );
 
   // ############################################ USEEFFECT FOR FAKE AGENT [REMOVE ENTIRELY LATER] ---------> LOAD FAKE AGENT
@@ -101,11 +101,11 @@ export default function ChatPage() {
       }
 
       const storedTools = await Promise.all(
-        refs.map((r) => loadToolSchemaByRef(r))
+        refs.map((r) => loadToolSchemaByRef(r)),
       );
 
       const tools = storedTools.map(
-        ({ id: _id, partitionKey: _pk, container: _c, ...tool }) => tool
+        ({ id: _id, partitionKey: _pk, container: _c, ...tool }) => tool,
       );
 
       setSelectedToolSchemas(tools);
@@ -140,20 +140,23 @@ export default function ChatPage() {
         messages: sentMessages,
         agent: selectedAgent,
         toolSchemas: selectedToolSchemas,
-        renderChunk: (appendText) => {
+        onFinalText: (appendText) => {
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === aiId ? { ...m, content: m.content + appendText } : m
-            )
+              m.id === aiId ? { ...m, content: m.content + appendText } : m,
+            ),
           );
+        },
+        onStep: (item) => {
+          console.log("[STEP]", item.text);
         },
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Stream failed.";
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === aiId ? { ...m, content: `Error: ${msg}` } : m
-        )
+          m.id === aiId ? { ...m, content: `Error: ${msg}` } : m,
+        ),
       );
     }
   };
