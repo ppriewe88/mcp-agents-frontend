@@ -712,8 +712,10 @@ a {
 .chatPageLayout {
   display: grid;
   grid-template-columns: 1fr 320px;
-  gap: 0;
-  height: 100vh;
+  gap: 6px;
+  
+  flex: 1;
+  min-height: 0;
 }
 
 .chatPageMain {
@@ -721,20 +723,23 @@ a {
   flex-direction: column;
   gap: 16px;
   overflow-y: auto;
+  min-height: 0;
+  padding-bottom: 16px;
 }
 
 .chatArea {
-  height: 600px;
+  height: 650px;
+
   border: 1px solid #e5e7eb;
+  background-color: #fafafa;
   border-radius: 6px;
+  
   padding: 8px;
+  gap: 6px;
 
   overflow-y: auto;
-  background-color: #fafafa;
-
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
 
 .chatMessage {
@@ -762,15 +767,13 @@ a {
 }
 
 .chatSendoff {
-  margin-top: 12px;
-  border: 1px solid #e5e7eb;
   border-radius: 8px;
-  padding: 10px;
   background-color: #ffffff;
 }
 
 .chatSendoffRow {
   display: flex;
+  height: 38px;
   gap: 10px;
   align-items: center;
 }
@@ -784,24 +787,51 @@ a {
   font-size: 14px;
 }
 
-/* ################################## Agent Thread (right sidebar) ################################## */
+.chatPanelCard {
+  height: 100px;
+  overflow-y: auto;
 
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
 
-.agentThreadContainer {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  gap: 12px;
+
+  background: var(--color-surface);
+  transition: background var(--transition-fast),
+    box-shadow var(--transition-fast), transform var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
+.chatPanelCard:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+.chatPanelCardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+/* ################################## Agent Thread (right sidebar) ################################## */
+
 .agentThread {
+  height: 650px;
+
   border-left: 1px solid var(--color-border);
-  background: var(--color-surface);
-  padding: 16px;
-  width: 320px;
+  background-color: #e4e8ec;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  
+  padding: 8px;
+  gap: 6px;
+
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+
 }
 /* ################################## Agent Thread Messages ################################## */
 

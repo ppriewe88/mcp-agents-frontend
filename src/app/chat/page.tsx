@@ -1,6 +1,6 @@
 "use client";
 
-import { ListArea } from "@/ui/ListArea";
+import { ChatPanelCard } from "@/features/chat/ChatPanelCard";
 import { ChatSendoff } from "@/features/chat/ChatSendoff";
 import { ChatArea } from "@/features/chat/ChatArea";
 import { ChatMessage } from "@/features/chat/ChatMessage";
@@ -156,29 +156,33 @@ export default function ChatPage() {
       <div className="chatPageMain">
         {/* // ############################################ START FAKE STUFF */}
         {!BACKEND_AGENTS_MODE && (
-          <ListArea title="Available Agents" variant="compact">
+          <ChatPanelCard title="Available Agents">
             <AgentBadgeList agents={agents} isLoading={isLoading} loadError={loadError} onSelect={handleSelectAgent} selectedAgent={selectedAgent} />
-          </ListArea>
+          </ChatPanelCard>
         )}
         {/* // ############################################ START FAKE STUFF */}
 
         <ChatArea>
           <ChatMessage role="ai">HALLO</ChatMessage>
-          <ChatArea>
-            {messages.map((m) => (
-              <ChatMessage key={m.id} role={m.role}>
-                {m.content}
-              </ChatMessage>
-            ))}
-          </ChatArea>
+          {messages.map((m) => (
+            <ChatMessage key={m.id} role={m.role}>
+              {m.content}
+            </ChatMessage>
+          ))}
         </ChatArea>
 
         {/* // ############################################ START FAKE STUFF */}
-        <ChatSendoff disabled={BACKEND_AGENTS_MODE ? false : !selectedAgent || toolsLoading || !!toolsError} onSend={sendMessage} />
+        <ChatPanelCard>
+          <ChatSendoff disabled={BACKEND_AGENTS_MODE ? false : !selectedAgent || toolsLoading || !!toolsError} onSend={sendMessage} />
+        </ChatPanelCard>
         {/* // ############################################ START FAKE STUFF */}
       </div>
 
-      <AgentThread items={threadItems} />
+      <div className="chatPageMain">
+        <ChatPanelCard title="Tools & Subagents">T.B.D.</ChatPanelCard>
+        <AgentThread items={threadItems} />
+        <ChatPanelCard></ChatPanelCard>
+      </div>
     </div>
   );
 }
