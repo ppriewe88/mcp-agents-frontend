@@ -61,11 +61,6 @@ export function AgentsList({
           </div>
 
           <div>
-            <strong>Direct answers allowed:</strong>{" "}
-            {agent.directAnswersAllowed ? "Yes" : "No"}
-          </div>
-
-          <div>
             <strong>Only one model call:</strong>{" "}
             {agent.onlyOneModelCall ? "Yes" : "No"}
           </div>

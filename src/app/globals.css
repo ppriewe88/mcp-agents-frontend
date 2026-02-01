@@ -3,68 +3,58 @@
   --background: #ffffff;
   --foreground: #171717;
 
+  /* Text colors */
+  --text-on-primary: #ffffff;
+  --text-heading: #111827;
+  --text-body: #2d2e30;
+
   /* Core palette */
-  --color-bg: #ffffff;
-  --color-fg: #111827;
-  --color-muted: #6b7280;
   --color-border: #e5e7eb;
 
   /* Surfaces */
   --color-surface: #ffffff;
-  --color-surface-alt: #f9fafb;
 
   /* Accent */
   --color-primary: #111827;
   --color-primary-hover: #1f2937;
   --color-primary-soft: rgba(17, 24, 39, 0.1);
 
-  --color-accent: #2563eb;
-  --color-accent-hover: #1d4ed8;
-  --color-accent-soft: rgba(37, 99, 235, 0.14);
-
-  /* Danger */
-  --color-danger: #ef4444;
-  --color-danger-soft: rgba(239, 68, 68, 0.12);
-
   /* Radius */
   --radius-sm: 8px;
   --radius-md: 10px;
   --radius-lg: 12px;
-  --radius-pill: 999px;
 
   /* Shadow + hover motion */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.15);
   --shadow-hover: 0 8px 16px rgba(17, 24, 39, 0.1);
 
-  --hover-tilt-y: -1px;
-  --transition-fast: 120ms;
-  --transition-med: 160ms;
+  --hover-tilt-y: -5px;
+  --transition-fast: 320ms;
 
   /* Card variants (defaults map to existing neutral look) */
   --card-bg: var(--color-surface);
   --card-border: var(--color-border);
-  --card-title: var(--color-fg);
-  --card-body: var(--color-muted);
+  --card-title: var(--text-heading);
+  --card-body: var(--text-body);
   --card-hover-bg: var(--color-surface);
   --card-hover-border: var(--color-border);
   --card-hover-shadow: var(--shadow-hover);
 
   /* Example variant palettes (tuned to your existing system) */
-  --card-agent-bg: rgba(37, 99, 235, 0.08);
-  --card-agent-border: rgba(37, 99, 235, 0.3);
-  --card-agent-hover-bg: rgba(37, 99, 235, 0.12);
-  --card-agent-hover-border: rgba(37, 99, 235, 0.42);
+  --card-agent-bg: rgb(220, 229, 248);
+  --card-agent-border: rgb(220, 229, 248);
+  --card-agent-hover-bg: rgb(153, 183, 248);
+  --card-agent-hover-border: rgb(153, 183, 248);
 
-  --card-toolschema-bg: rgba(16, 185, 129, 0.08);
-  --card-toolschema-border: rgba(16, 185, 129, 0.3);
-  --card-toolschema-hover-bg: rgba(16, 185, 129, 0.12);
-  --card-toolschema-hover-border: rgba(16, 185, 129, 0.42);
+  --card-toolschema-bg: rgb(199, 241, 227, 1);
+  --card-toolschema-border: rgb(199, 241, 227);
+  --card-toolschema-hover-bg: rgb(66, 192, 150);
+  --card-toolschema-hover-border: rgb(66, 192, 150);
 
-  --card-server-bg: rgba(107, 114, 128, 0.08);
-  --card-server-border: rgba(107, 114, 128, 0.28);
-  --card-server-hover-bg: rgba(107, 114, 128, 0.12);
-  --card-server-hover-border: rgba(107, 114, 128, 0.38);
+  --card-server-bg: rgb(192, 192, 192, 1);
+  --card-server-border: rgb(192, 192, 192, 1);
+  --card-server-hover-bg: rgb(155, 157, 161);
+  --card-server-hover-border: rgb(155, 157, 161);
 
   --card-servertool-bg: var(--card-server-bg);
   --card-servertool-border: var(--card-server-border);
@@ -78,7 +68,7 @@
   /* Modal (single neutral style, opaque) */
   --modal-bg: #f3f4f6;
   --modal-border: #d1d5db;
-  --modal-title: var(--color-fg);
+  --modal-title: var(--text-heading);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -152,7 +142,7 @@ a {
   background: transparent;
   border-radius: var(--radius-sm);
   margin-bottom: 12px;
-  color: var(--color-fg);
+  color: var(--text-heading);
 }
 
 .navList {
@@ -163,7 +153,7 @@ a {
 
 .navButton {
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--text-on-primary);
   display: block;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
@@ -180,13 +170,6 @@ a {
   transform: translateY(var(--hover-tilt-y));
 }
 
-.navButtonActive {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: #ffffff;
-  box-shadow: 0 0 0 3px var(--color-primary-soft);
-}
-
 /* ################################## Grid, container and headers ################################## */
 
 .grid {
@@ -201,11 +184,6 @@ a {
   gap: 16px;
 }
 
-.header {
-  display: flex;
-  justify-content: flex-start;
-}
-
 /* ################################## Add button ################################## */
 
 .addButton {
@@ -214,7 +192,7 @@ a {
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-primary);
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--text-on-primary);
   font-size: 24px;
   line-height: 1;
   cursor: pointer;
@@ -279,7 +257,7 @@ a {
 
 .formLabel {
   font-size: 0.9rem;
-  color: var(--color-muted);
+  color: var(--text-body);
 }
 
 .textInput,
@@ -290,7 +268,7 @@ a {
   padding: 10px 12px;
   font: inherit;
   background: var(--color-surface);
-  color: var(--color-fg);
+  color: var(--text-heading);
 }
 
 .textArea {
@@ -318,7 +296,7 @@ a {
   align-self: flex-start;
   border: 1px solid var(--color-primary);
   background: var(--color-primary);
-  color: white;
+  color: var(--text-on-primary);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
   cursor: pointer;
@@ -420,13 +398,6 @@ a {
   --_card-hover-border: var(--card-servertool-hover-border);
 }
 
-.card[data-variant="toolbadge"] {
-  --_card-bg: var(--card-toolbadge-bg);
-  --_card-border: var(--card-toolbadge-border);
-  --_card-hover-bg: var(--card-toolbadge-hover-bg);
-  --_card-hover-border: var(--card-toolbadge-hover-border);
-}
-
 /* ################################## Checkbox ################################## */
 
 .checkboxRow {
@@ -453,7 +424,7 @@ a {
 .scrollContainerTitle {
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-muted);
+  color: var(--text-body);
 }
 
 .scrollContainer {
@@ -478,21 +449,16 @@ a {
 
 .listArea {
   min-height: 200px;
-  border: 1px dashed var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   background: var(--color-surface);
-  transition: background var(--transition-fast),
-    box-shadow var(--transition-fast), transform var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-.listArea:hover {
   box-shadow: var(--shadow-hover);
 }
+
 
 .listArea.compact {
   min-height: unset;
@@ -502,24 +468,21 @@ a {
 
 .listAreaHalf {
   width: 50%;
-  border: 1px dashed var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 16px;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   background: var(--color-surface);
-  transition: background var(--transition-fast),
-    box-shadow var(--transition-fast), transform var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-.listAreaHalf:hover {
   box-shadow: var(--shadow-hover);
 }
 
 .listAreaTitle {
   font-size: 14px;
   font-weight: 600;
-  color: var(--color-muted);
+  color: var(--text-body);
 }
 
 .halfRowWrap {
@@ -593,20 +556,20 @@ a {
 .toolBadgeName {
   font-size: 12px;
   font-weight: 600;
-  color: var(--color-fg);
+  color: var(--text-heading);
   line-height: 1.2;
 }
 
 .toolBadgeMeta {
   font-size: 11px;
-  color: var(--color-muted);
+  color: var(--text-body);
   line-height: 1.2;
 }
 
 .toolBadgeRemove {
   border: none;
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--text-on-primary);
   font-size: 14px;
   line-height: 1;
   cursor: pointer;
@@ -683,7 +646,7 @@ a {
 .agentBadgeName {
   font-size: 12px;
   font-weight: 600;
-  color: var(--color-fg);
+  color: var(--text-heading);
   line-height: 1.2;
 
   min-width: 0;
@@ -712,8 +675,8 @@ a {
 .chatPageLayout {
   display: grid;
   grid-template-columns: 1fr 320px;
-  gap: 6px;
-  
+  gap: 0;
+
   flex: 1;
   min-height: 0;
 }
@@ -724,7 +687,7 @@ a {
   gap: 16px;
   overflow-y: auto;
   min-height: 0;
-  padding-bottom: 16px;
+  padding: 6px 10px 16px 10px;
 }
 
 .chatArea {
@@ -733,7 +696,8 @@ a {
   border: 1px solid #e5e7eb;
   background-color: #fafafa;
   border-radius: 6px;
-  
+  box-shadow: var(--shadow-hover);
+
   padding: 8px;
   gap: 6px;
 
@@ -791,7 +755,7 @@ a {
   height: 100px;
   overflow-y: auto;
 
-  border: 1px dashed var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 16px;
 
@@ -800,19 +764,13 @@ a {
   gap: 12px;
 
   background: var(--color-surface);
-  transition: background var(--transition-fast),
-    box-shadow var(--transition-fast), transform var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-.chatPanelCard:hover {
   box-shadow: var(--shadow-hover);
 }
 
 .chatPanelCardTitle {
   font-size: 14px;
   font-weight: 600;
-  color: var(--color-muted);
+  color: var(--text-body);
 }
 
 /* ################################## Agent Thread (right sidebar) ################################## */
@@ -824,14 +782,14 @@ a {
   background-color: #e4e8ec;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
-  
+  box-shadow: var(--shadow-hover);
+
   padding: 8px;
   gap: 6px;
 
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-
 }
 /* ################################## Agent Thread Messages ################################## */
 
@@ -849,7 +807,7 @@ a {
 .agentThreadMessage.fromOuter {
   align-self: flex-start;
   background-color: #1e3a8a;
-  color: #ffffff;
+  color: var(--text-on-primary);
   border-top-left-radius: 2px;
 }
 
@@ -857,14 +815,14 @@ a {
 .agentThreadMessage.fromInner {
   align-self: flex-end;
   background-color: #c2410c;
-  color: #ffffff;
+  color: var(--text-on-primary);
   border-top-right-radius: 2px;
 }
 
 /* Separator between conversations */
 .agentThreadSeparator {
   text-align: center;
-  color: var(--color-muted);
+  color: var(--text-body);
   font-size: 12px;
   margin: 8px 0;
 }
