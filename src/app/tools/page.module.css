@@ -3,7 +3,6 @@
   gap: 8px;
   margin-bottom: 6px;
   font-size: 12px;
-  opacity: 0.85;
 }
 
 .metaLabel {
@@ -12,6 +11,7 @@
 
 .metaValue {
   overflow-wrap: anywhere;
+  font-weight: normal
 }
 
 .argsList {
@@ -25,7 +25,6 @@
 }
 
 .argServerName {
-  opacity: 0.6;
   font-size: 11px;
 }
 
@@ -33,7 +32,6 @@
   display: flex;
   gap: 10px;
   font-size: 11px;
-  opacity: 0.8;
 }
 
 .argDescription {

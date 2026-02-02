@@ -25,14 +25,7 @@ export function ToolSchemasList({
   return (
     <div className="grid">
       {tools.map((tool) => (
-        <Card
-          key={tool.id}
-          title={tool.name_for_llm}
-          variant="toolschema"
-          dataId={tool.id}
-          dataContainer={tool.container}
-          onClick={() => onOpen(tool)}
-        >
+        <Card key={tool.id} title={tool.name_for_llm} variant="toolschema" dataId={tool.id} dataContainer={tool.container} onClick={() => onOpen(tool)}>
           <div className={styles.metaRow}>
             <span className={styles.metaLabel}>Server:</span>
             <span className={styles.metaValue}>{tool.server_url}</span>
@@ -51,7 +44,7 @@ export function ToolSchemasList({
           {tool.description_for_llm?.trim() ? (
             <div className={styles.metaRow}>
               <span className={styles.metaLabel}>
-                Description: {tool.description_for_llm}
+                Description: <span className={styles.metaValue}>{tool.description_for_llm}</span>
               </span>
             </div>
           ) : null}
@@ -68,28 +61,15 @@ export function ToolSchemasList({
                 <li key={arg.name_on_server} className={styles.argItem}>
                   <div>
                     <strong>{arg.name_for_llm}</strong>
-                    {arg.name_for_llm !== arg.name_on_server && (
-                      <span className={styles.argServerName}>
-                        {" "}
-                        (server: {arg.name_on_server})
-                      </span>
-                    )}
+                    {arg.name_for_llm !== arg.name_on_server && <span className={styles.argServerName}> (server: {arg.name_on_server})</span>}
                   </div>
 
                   <div className={styles.argMeta}>
                     <span>type: {arg.type ?? "string"}</span>
-                    {arg.required ? (
-                      <span>required</span>
-                    ) : (
-                      <span>optional</span>
-                    )}
+                    {arg.required ? <span>required</span> : <span>optional</span>}
                   </div>
 
-                  {arg.description_for_llm?.trim() ? (
-                    <div className={styles.argDescription}>
-                      {arg.description_for_llm}
-                    </div>
-                  ) : null}
+                  {arg.description_for_llm?.trim() ? <div className={styles.argDescription}>{arg.description_for_llm}</div> : null}
                 </li>
               ))}
             </ul>

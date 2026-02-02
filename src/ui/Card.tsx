@@ -1,12 +1,6 @@
 import type { ReactNode, DragEventHandler } from "react";
 
-type CardVariant =
-  | "default"
-  | "agent"
-  | "toolschema"
-  | "server"
-  | "servertool"
-  | "toolbadge";
+type CardVariant = "default" | "agent" | "toolschema" | "server" | "servertool";
 
 type CardProps = {
   title: string;

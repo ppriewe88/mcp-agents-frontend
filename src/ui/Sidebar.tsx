@@ -12,6 +12,7 @@ export function Sidebar() {
         <NavButton href="/tools" label="Registered MCP-Tools" />
         <NavButton href="/agents" label="Agent Configuration" />
         <NavButton href="/chat" label="Chat" />
+        <NavButton href="/test" label="Test" />
       </nav>
     </aside>
   );
