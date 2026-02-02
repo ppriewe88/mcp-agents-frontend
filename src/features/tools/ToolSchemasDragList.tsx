@@ -9,9 +9,12 @@ type Props = {
   tools: Array<StoredItem<ToolSchema>>;
   isLoading: boolean;
   loadError: string | null;
+  highlightedToolIds: Set<string>;
+  hoveredToolId: string | null;
+  onToolHover: (toolId: string | null) => void;
 };
 
-export function DragToolSchemasList({ tools, isLoading, loadError }: Props) {
+export function DragToolSchemasList({ tools, isLoading, loadError, highlightedToolIds, hoveredToolId, onToolHover }: Props) {
   if (isLoading) return <div>Loading...</div>;
   if (loadError) return <div className="formError">{loadError}</div>;
   if (tools.length === 0) return <div>No tools yet.</div>;
@@ -33,6 +36,9 @@ export function DragToolSchemasList({ tools, isLoading, loadError }: Props) {
             variant="toolschema"
             dataContainer={tool.container}
             draggable={true}
+            isHighlighted={hoveredToolId === tool.id || highlightedToolIds.has(tool.id)}
+            onMouseEnter={() => onToolHover(tool.id)}
+            onMouseLeave={() => onToolHover(null)}
             onDragStart={(e) => {
               e.dataTransfer.effectAllowed = "copy";
               e.dataTransfer.setData(

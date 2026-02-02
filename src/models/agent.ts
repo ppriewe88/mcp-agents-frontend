@@ -17,6 +17,10 @@ export type Agent = {
 
   // tool assignment (mirrors AgentRegistryEntry.tool_schemas)
   toolSchemas?: ToolSchemaRef[];
+
+  // is orchestrator?
+  isOrchestrator?: boolean;
+  subAgents?: AgentRef[];
 };
 
 export function normalizeAgent(agent: Agent): Agent {

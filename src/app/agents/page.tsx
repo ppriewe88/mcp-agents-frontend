@@ -1,32 +1,55 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { AddButton } from "@/ui/AddButton";
 import { ListArea } from "@/ui/ListArea";
 import { ListAreaHalf } from "@/ui/ListAreaHalf";
 import { AgentCreateOrEditModal } from "@/features/agents/AgentCreateOrEditModal";
 import type { Agent } from "@/models/agent";
 import type { StoredItem } from "@/storage/operations";
-import {
-  loadAgents,
-  saveAgent,
-  updateAgent,
-} from "@/features/agents/agents.storage";
+import { loadAgents, saveAgent, updateAgent } from "@/features/agents/agents.storage";
 import type { ToolSchema, ToolSchemaRef } from "@/models/toolSchema";
 import { loadToolSchemas } from "@/features/tools/toolschemas.storage";
 import { AgentsList } from "@/features/agents/AgentsList";
 import { DragToolSchemasList } from "@/features/tools/ToolSchemasDragList";
 
 export default function AgentsPage() {
-  const [agents, setAgents] = useState<Array<StoredItem<Agent>>>([]);
+  // ################################################################################ STATES
+  // basic states
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  // agents & modal states
+  const [agents, setAgents] = useState<Array<StoredItem<Agent>>>([]);
+  const [selectedAgent, setSelectedAgent] = useState<StoredItem<Agent> | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<StoredItem<Agent> | null>(
-    null
-  );
+  const [modalMode, setModalMode] = useState<"orchestrator" | "subagent">("subagent");
+  // tool states
   const [tools, setTools] = useState<Array<StoredItem<ToolSchema>>>([]);
+  // hover effect states (bidirectional)
+  const [hoveredAgentId, setHoveredAgentId] = useState<string | null>(null);
+  const [hoveredToolId, setHoveredToolId] = useState<string | null>(null);
 
+  // Filtering for render
+  const orchestratorAgents = useMemo(() => agents.filter((a) => a.isOrchestrator), [agents]);
+  const subAgents = useMemo(() => agents.filter((a) => !a.isOrchestrator), [agents]);
+
+  // ################################################################################ COMPUTEDS
+  // Compute highlighted items based on hover state
+  const highlightedToolIds = useMemo(() => {
+    if (!hoveredAgentId) return new Set<string>();
+    const agent = agents.find((a) => a.id === hoveredAgentId);
+    return new Set(agent?.toolSchemas?.map((t) => t.tool_id) ?? []);
+  }, [hoveredAgentId, agents]);
+
+  const highlightedAgentIds = useMemo(() => {
+    if (!hoveredToolId) return new Set<string>();
+    // TODO: Once tools have agentRefs, compute agents that use this tool
+    // For now: dummy implementation (empty set)
+    return new Set<string>();
+  }, [hoveredToolId, agents]);
+
+  // ################################################################################ HANDLERS
+  // loading agents & tools on mount
   useEffect(() => {
     let cancelled = false;
 
@@ -52,11 +75,18 @@ export default function AgentsPage() {
     };
   }, []);
 
-  const handleAddAgent = () => {
+  const handleAddSubagent = () => {
     setSelectedAgent(null);
     setIsModalOpen(true);
   };
 
+  const handleAddOrchestratorAgent = () => {
+    setSelectedAgent(null);
+    setModalMode("orchestrator");
+    setIsModalOpen(true);
+  };
+
+  // handling modal open for creating & editing & closing
   const handleOpenAgentEdit = (agent: StoredItem<Agent>) => {
     setSelectedAgent(agent);
     setIsModalOpen(true);
@@ -72,7 +102,7 @@ export default function AgentsPage() {
           ...agent,
           id: selectedAgent.id,
           partitionKey: selectedAgent.partitionKey,
-          container: selectedAgent.container,
+          container: selectedAgent.container
         };
 
         await updateAgent(merged);
@@ -93,17 +123,12 @@ export default function AgentsPage() {
     setSelectedAgent(null);
   };
 
-  const handleDropToolSchema = async (
-    agent: StoredItem<Agent>,
-    toolRef: ToolSchemaRef
-  ) => {
+  // handling dragging of tools onto agents
+  const handleDropToolSchema = async (agent: StoredItem<Agent>, toolRef: ToolSchemaRef) => {
     try {
       const existing = agent.toolSchemas ?? [];
 
-      const alreadyAssigned = existing.some(
-        (t) =>
-          t.tool_id === toolRef.tool_id && t.container === toolRef.container
-      );
+      const alreadyAssigned = existing.some((t) => t.tool_id === toolRef.tool_id && t.container === toolRef.container);
       if (alreadyAssigned) return;
 
       const merged: StoredItem<Agent> = {
@@ -111,7 +136,7 @@ export default function AgentsPage() {
         toolSchemas: [...existing, toolRef],
         id: agent.id,
         partitionKey: agent.partitionKey,
-        container: agent.container,
+        container: agent.container
       };
 
       await updateAgent(merged);
@@ -123,43 +148,34 @@ export default function AgentsPage() {
     }
   };
 
+  // ################################################################################ RENDER
   return (
-    <div className="container">
-      <AddButton onClick={handleAddAgent} ariaLabel="Create new agent" />
+    <>
+      <div className="container">
+        <AddButton onClick={handleAddSubagent} ariaLabel="Create new orchestrator agent" />
+        <ListArea title="Agent Configurations">PLACEHOLDER FOR AGENTS AS TOOLS CARDS</ListArea>
 
-      <ListArea title="Agent Configurations">
-        <AgentsList
-          agents={agents}
-          isLoading={isLoading}
-          loadError={loadError}
-          onOpen={handleOpenAgentEdit}
-          onDropToolSchema={handleDropToolSchema}
-        />
-      </ListArea>
-
-      {isModalOpen && (
-        <AgentCreateOrEditModal
-          key={selectedAgent?.id ?? "create"}
-          isOpen={true}
-          initialAgent={selectedAgent}
-          onClose={handleCloseModal}
-          onSubmit={handleSubmitCreateOrEdit}
-        />
-      )}
-
-      <div className="halfRowWrap">
-        <ListAreaHalf title="Registered MCP-Tools">
-          <DragToolSchemasList
-            tools={tools}
+        <AddButton onClick={handleAddSubagent} ariaLabel="Create new subagent" />
+        <ListArea title="Subagent Configurations">
+          <AgentsList
             isLoading={isLoading}
             loadError={loadError}
+            agents={agents}
+            hoveredAgentId={hoveredAgentId}
+            highlightedAgentIds={highlightedAgentIds}
+            // handlers
+            onOpen={handleOpenAgentEdit}
+            onDropToolSchema={handleDropToolSchema}
+            onAgentHover={(agentId) => setHoveredAgentId(agentId)}
           />
-        </ListAreaHalf>
+        </ListArea>
 
-        <ListAreaHalf title="Registered Agents as Tools">
-          PLACEHOLDER FOR AGENTS AS TOOLS CARDS
-        </ListAreaHalf>
+        {isModalOpen && <AgentCreateOrEditModal key={selectedAgent?.id ?? "create"} isOpen={true} initialAgent={selectedAgent} onClose={handleCloseModal} onSubmit={handleSubmitCreateOrEdit} />}
+
+        <ListArea title="Registered MCP-Tools">
+          <DragToolSchemasList tools={tools} isLoading={isLoading} loadError={loadError} highlightedToolIds={highlightedToolIds} hoveredToolId={hoveredToolId} onToolHover={(toolId) => setHoveredToolId(toolId)} />
+        </ListArea>
       </div>
-    </div>
+    </>
   );
 }

@@ -359,7 +359,8 @@ a {
     border-color var(--transition-fast);
 }
 
-.card:hover {
+.card:hover,
+.card.highlighted {
   background: var(--_card-hover-bg);
   border-color: var(--_card-hover-border);
   box-shadow: var(--_card-hover-shadow);

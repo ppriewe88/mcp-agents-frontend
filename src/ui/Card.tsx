@@ -12,6 +12,11 @@ type CardProps = {
   // optional coloring
   variant?: CardVariant;
 
+  // hover effects
+  isHighlighted?: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+
   // optional Drag & Drop (default: disabled)
   draggable?: boolean;
   onDragStart?: DragEventHandler<HTMLDivElement>;
@@ -26,20 +31,30 @@ export function Card({
   children,
   onClick,
   variant = "default",
+  // hover effects
+  isHighlighted = false,
+  onMouseEnter,
+  onMouseLeave,
+  // dragging
   draggable = false,
   onDragStart,
   onDragOver,
-  onDrop,
+  onDrop
 }: CardProps) {
   return (
     <div
-      className="card"
+      className={`card ${isHighlighted ? "highlighted" : ""}`}
       data-variant={variant}
       data-id={dataId}
       data-container={dataContainer}
       onClick={onClick}
       title={title}
       role={onClick ? "button" : undefined}
+      // highlighting
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      data-highlighted={isHighlighted ? "true" : "false"}
+      // dragging
       draggable={draggable}
       onDragStart={onDragStart}
       onDragOver={onDragOver}

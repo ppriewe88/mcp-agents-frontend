@@ -10,17 +10,14 @@ type AgentsListProps = {
   loadError: string | null;
   onOpen: (agent: StoredItem<Agent>) => void;
   onDropToolSchema: (agent: StoredItem<Agent>, toolRef: ToolSchemaRef) => void;
+  hoveredAgentId: string | null;
+  highlightedAgentIds: Set<string>;
+  onAgentHover: (agentId: string | null) => void;
 };
 
 const TOOL_REF_MIME = "application/x-mcp-toolschema-ref";
 
-export function AgentsList({
-  agents,
-  isLoading,
-  loadError,
-  onOpen,
-  onDropToolSchema,
-}: AgentsListProps) {
+export function AgentsList({ agents, isLoading, loadError, onOpen, onDropToolSchema, hoveredAgentId, highlightedAgentIds, onAgentHover }: AgentsListProps) {
   if (isLoading) return <div>Loading...</div>;
   if (loadError) return <div className="formError">{loadError}</div>;
   if (agents.length === 0) return <div>No agents yet.</div>;
@@ -34,6 +31,9 @@ export function AgentsList({
           title={agent.name}
           variant="agent"
           onClick={() => onOpen(agent)}
+          isHighlighted={hoveredAgentId === agent.id || highlightedAgentIds.has(agent.id)}
+          onMouseEnter={() => onAgentHover(agent.id)}
+          onMouseLeave={() => onAgentHover(null)}
           onDragOver={(e) => {
             e.preventDefault();
             e.dataTransfer.dropEffect = "copy";
@@ -61,15 +61,11 @@ export function AgentsList({
           </div>
 
           <div>
-            <strong>Only one model call:</strong>{" "}
-            {agent.onlyOneModelCall ? "Yes" : "No"}
+            <strong>Only one model call:</strong> {agent.onlyOneModelCall ? "Yes" : "No"}
           </div>
 
           <div>
-            <strong>Max toolcalls:</strong>{" "}
-            {agent.maxToolcalls !== undefined
-              ? agent.maxToolcalls
-              : "Unlimited"}
+            <strong>Max toolcalls:</strong> {agent.maxToolcalls !== undefined ? agent.maxToolcalls : "Unlimited"}
           </div>
 
           <div>
