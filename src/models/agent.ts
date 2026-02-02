@@ -34,6 +34,8 @@ export function normalizeAgent(agent: Agent): Agent {
     maxToolcalls: agent.maxToolcalls,
     onlyOneModelCall: agent.onlyOneModelCall ?? false,
     toolSchemas: agent.toolSchemas ?? [],
+    isOrchestrator: agent.isOrchestrator,
+    subAgents: agent.subAgents ?? [],
   };
 }
 
