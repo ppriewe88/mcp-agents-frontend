@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { AddButton } from "@/ui/AddButton";
 import { ListArea } from "@/ui/ListArea";
-import { ListAreaHalf } from "@/ui/ListAreaHalf";
 import { AgentCreateOrEditModal } from "@/features/agents/AgentCreateOrEditModal";
 import type { Agent, AgentRef } from "@/models/agent";
 import type { StoredItem } from "@/storage/operations";

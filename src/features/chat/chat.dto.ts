@@ -4,6 +4,7 @@ import { isEmptyDefault } from "@/features/tools/toolschemas.utils";
 import { ChatMessageModel } from "@/models/chatMessage";
 
 type AgentConfigDto = {
+  // mirrors AgentBehaviourConfig of backend
   name: string;
   description?: string; // optional, backend default ""
   system_prompt: string;
