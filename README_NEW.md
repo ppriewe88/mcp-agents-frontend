@@ -196,6 +196,8 @@ optional klickbar (onClick)
 
 optional selektierbar (selected)
 
+optional entfernbar (onRemove) – zeigt Remove-Button (×) nur bei gesetztem onRemove
+
 keine Persistenzlogik
 
 kein Wrapper-DIV notwendig
@@ -218,6 +220,16 @@ selectedAgent?.id === agent.id
 Page: /agents
 Persistenz: Cosmos (agents)
 
+UI-Struktur:
+
+Zwei separate Bereiche mit jeweils eigenem AddButton:
+
+"Agent Configurations" → Orchestrator-Agents (isOrchestrator: true)
+
+"Subagent Configurations" → normale Agents (isOrchestrator: false/undefined)
+
+"Registered MCP-Tools" → Tool-Liste für Drag & Drop
+
 Status:
 
 Create ✔
@@ -228,17 +240,79 @@ Edit ✔
 
 Tool-Zuweisung ✔
 
+Agent-Zuweisung (Orchestrator → Subagents) ✔
+
 Chat-Selektion ✔
 
-Edit-Flow:
+6.1.1 Orchestrator Agents vs. Subagents
+
+Das System unterscheidet zwei Agent-Typen:
+
+Orchestrator-Agents (isOrchestrator: true)
+
+können andere Agents als Subagents verknüpfen
+
+werden in separater ListArea "Agent Configurations" angezeigt
+
+Modal zeigt "Assigned Subagents"-Sektion mit AgentBadges
+
+Subagents (isOrchestrator: false/undefined)
+
+normale Agents
+
+werden in "Subagent Configurations" angezeigt
+
+können zu Orchestrator-Agents zugewiesen werden
+
+Datenmodell:
+
+type Agent = {
+  // ... existing fields
+  isOrchestrator?: boolean;
+  subAgents?: AgentRef[];
+};
+
+type AgentRef = {
+  agent_id: string;
+  container: string;
+  name: string;
+};
+
+6.1.2 Modal-Mode-Logik
+
+Das AgentCreateOrEditModal arbeitet mit zwei Modi:
+
+modalMode: "orchestrator" | "subagent"
+
+Create:
+
+Click auf "Create new orchestrator agent" → modalMode = "orchestrator"
+
+Click auf "Create new subagent" → modalMode = "subagent"
+
+Edit:
+
+agent.isOrchestrator = true → modalMode = "orchestrator"
+
+agent.isOrchestrator = false/undefined → modalMode = "subagent"
+
+Save:
+
+isOrchestrator wird basierend auf modalMode gesetzt
+
+subAgents wird nur bei modalMode === "orchestrator" gespeichert
+
+6.1.3 Edit-Flow
 
 Card-Klick → StoredItem<Agent> in State
+
+modalMode wird aus agent.isOrchestrator abgeleitet
 
 Edit-Modal nur gemountet, wenn Item existiert
 
 Save: Patch → Merge → updateAgent → Reload
 
-Tool-Zuweisung:
+6.1.4 Tool-Zuweisung
 
 Agents speichern keine vollständigen ToolSchemas, sondern Referenzen.
 
@@ -248,6 +322,38 @@ container: string; // z. B. "toolschemas"
 name_for_llm: string; // UI / Kontext
 server_url: string; // UI / Kontext
 };
+
+6.1.5 Agent-Zuweisung (Orchestrator → Subagents)
+
+Orchestrator-Agents können Subagents verknüpfen (analog zu Tools).
+
+Zwei Zuweisungsmethoden:
+
+Modal-basiert: Remove-Funktion im AgentCreateOrEditModal (orchestrator mode)
+
+Drag & Drop: Subagent-Cards (AgentsList) auf Orchestrator-Cards (OrchestratorAgentsList) ziehen
+
+Komponenten-Architektur:
+
+AgentsList: Zeigt Subagents, akzeptiert Tool-Drops, ist draggable
+
+OrchestratorAgentsList: Zeigt Orchestrators, akzeptiert Tool- und Agent-Drops, nicht draggable
+
+MIME-Type für Transfer: "application/x-mcp-agent-ref"
+
+Duplicate-Prevention über agent_id + container
+
+6.1.6 Cross-Highlighting
+
+Bidirektionales Highlighting beim Hovern:
+
+Agent → Tools: Hovern über Agent highlightet zugewiesene Tools
+
+Orchestrator → Subagents: Hovern über Orchestrator highlightet zugewiesene Subagents
+
+Orchestrator → Subagent-Tools: Hovern über Orchestrator highlightet auch Tools der zugewiesenen Subagents
+
+Implementierung über useMemo mit highlightedToolIds und highlightedAgentIds Sets
 
 6.2 MCP-Server
 
@@ -422,6 +528,14 @@ ToolSchemasDragList
 → updateAgent
 → Reload
 
+Agent-Zuweisung (Drag & Drop)
+AgentsList
+→ Drag AgentRef (Subagent)
+→ Drop auf OrchestratorAgentsList-Card
+→ Merge in Orchestrator
+→ updateAgent
+→ Reload
+
 Agent-Auswahl (Chat)
 ChatPage
 → AgentBadgeList
@@ -448,17 +562,35 @@ Persistenzänderungen vor neuen Features
 
 Agent Create / Edit ✔
 
+Orchestrator / Subagent Differenzierung ✔
+
+Modal-Mode-Logik (orchestrator/subagent) ✔
+
+Agent-Zuweisung (Orchestrator → Subagents) ✔ (Modal + Drag & Drop)
+
+AgentBadge mit optionalem Remove-Button ✔
+
 ToolSchema Create / Edit ✔
 
 Drag & Drop Tool-Zuweisung ✔
 
+Drag & Drop Agent-Zuweisung (Subagents → Orchestrators) ✔
+
+OrchestratorAgentsList als separate Komponente ✔
+
 Persistenz der Tool-Referenzen ✔
+
+Persistenz der Agent-Referenzen (subAgents) ✔
 
 Anzeige & Entfernen im Agent-Modal ✔
 
 Chat-Agent-Auswahl ✔
 
 Selected-State & visuelles Feedback ✔
+
+Cross-Highlighting (Agent ↔ Tools) ✔
+
+Cross-Highlighting (Orchestrator → Subagents + Subagent-Tools) ✔
 
 Architektur konsistent ✔
 
@@ -468,13 +600,17 @@ Chat-Button & Fetch-Flow mit selectedAgent
 
 serverseitige Tool-Auflösung aus toolSchemas
 
+serverseitige Agent-Auflösung aus subAgents (rekursiv)
+
 Agent-Execution-Endpoint
 
 optionale Tastaturnavigation / Deselect-Logik
 
 Status-Fazit
 
-Das Projekt verfügt nun über eine konsistente, skalierbare Administrations- und Auswahlarchitektur, die Konfiguration und Interaktion (Chat) sauber vorbereitet.
+Das Projekt verfügt nun über eine konsistente, skalierbare Administrations- und Auswahlarchitektur mit Orchestrator/Subagent-Hierarchie.
+Die Konfiguration von Tools und Agents sowie deren Verknüpfung erfolgt über etablierte Patterns (Drag & Drop, Modal-Management, Referenzierung).
+Die Chat-Integration ist vorbereitet; serverseitige Auflösung von Tool- und Agent-Referenzen steht als nächster Schritt an.
 Neue Features lassen sich mechanisch und ohne Refactor-Zwang entlang etablierter Muster ergänzen.
 
 ########## ERGÄNZUNG zum Thema Streaming:

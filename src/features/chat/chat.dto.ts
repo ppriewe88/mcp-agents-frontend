@@ -4,6 +4,7 @@ import { isEmptyDefault } from "@/features/tools/toolschemas.utils";
 import { ChatMessageModel } from "@/models/chatMessage";
 
 type AgentConfigDto = {
+  // mirrors AgentBehaviourConfig of backend
   name: string;
   description?: string; // optional, backend default ""
   system_prompt: string;
@@ -39,10 +40,15 @@ type ToolSchemaDto = {
   args_schema: ToolArgsSchemaDto;
 };
 
-export type StreamAgentRequestDTO = {
-  messages: Array<ChatMessageModel>;
+type AgentBundleDto = {
   agent_config: AgentConfigDto;
   tool_schemas: ToolSchemaDto[];
+};
+
+export type StreamAgentRequestDTO = {
+  messages: Array<ChatMessageModel>;
+  agent: AgentBundleDto;
+  subagents?: AgentBundleDto[];
 };
 
 export function toAgentConfigDto(frontendAgent: Agent): AgentConfigDto {

@@ -4,12 +4,13 @@ import type { StoredItem } from "@/storage/operations";
 import { Card } from "@/ui/Card";
 import type { ToolSchemaRef } from "@/models/toolSchema";
 
-type AgentsListProps = {
+type OrchestratorAgentsListProps = {
   agents: Array<StoredItem<Agent>>;
   isLoading: boolean;
   loadError: string | null;
   onOpen: (agent: StoredItem<Agent>) => void;
   onDropToolSchema: (agent: StoredItem<Agent>, toolRef: ToolSchemaRef) => void;
+  onDropAgent: (orchestrator: StoredItem<Agent>, agentRef: AgentRef) => void;
   hoveredAgentId: string | null;
   highlightedAgentIds: Set<string>;
   onAgentHover: (agentId: string | null) => void;
@@ -18,7 +19,7 @@ type AgentsListProps = {
 const TOOL_REF_MIME = "application/x-mcp-toolschema-ref";
 const AGENT_REF_MIME = "application/x-mcp-agent-ref";
 
-export function AgentsList({ agents, isLoading, loadError, onOpen, onDropToolSchema, hoveredAgentId, highlightedAgentIds, onAgentHover }: AgentsListProps) {
+export function OrchestratorAgentsList({ agents, isLoading, loadError, onOpen, onDropToolSchema, onDropAgent, hoveredAgentId, highlightedAgentIds, onAgentHover }: OrchestratorAgentsListProps) {
   if (isLoading) return <div>Loading...</div>;
   if (loadError) return <div className="formError">{loadError}</div>;
   if (agents.length === 0) return <div>No agents yet.</div>;
@@ -35,16 +36,6 @@ export function AgentsList({ agents, isLoading, loadError, onOpen, onDropToolSch
           isHighlighted={hoveredAgentId === agent.id || highlightedAgentIds.has(agent.id)}
           onMouseEnter={() => onAgentHover(agent.id)}
           onMouseLeave={() => onAgentHover(null)}
-          draggable={true}
-          onDragStart={(e) => {
-            const agentRef: AgentRef = {
-              agent_id: agent.id,
-              container: agent.container,
-              name: agent.name
-            };
-            e.dataTransfer.setData(AGENT_REF_MIME, JSON.stringify(agentRef));
-            e.dataTransfer.effectAllowed = "copy";
-          }}
           onDragOver={(e) => {
             e.preventDefault();
             e.dataTransfer.dropEffect = "copy";
@@ -52,17 +43,31 @@ export function AgentsList({ agents, isLoading, loadError, onOpen, onDropToolSch
           onDrop={(e) => {
             e.preventDefault();
 
-            const raw = e.dataTransfer.getData(TOOL_REF_MIME);
-            if (!raw) return;
+            // Handle tool drop (existing)
+            const toolRaw = e.dataTransfer.getData(TOOL_REF_MIME);
+            if (toolRaw) {
+              try {
+                const toolRef = JSON.parse(toolRaw) as ToolSchemaRef;
+                if (toolRef?.tool_id) {
+                  onDropToolSchema(agent, toolRef);
+                  return;
+                }
+              } catch {
+                // invalid JSON
+              }
+            }
 
-            try {
-              const toolRef = JSON.parse(raw) as ToolSchemaRef;
-              if (!toolRef?.tool_id) return;
-
-              onDropToolSchema(agent, toolRef);
-            } catch {
-              // ungültiges JSON -> ignorieren
-              return;
+            // Handle agent drop (NEW - orchestrators only)
+            const agentRaw = e.dataTransfer.getData(AGENT_REF_MIME);
+            if (agentRaw) {
+              try {
+                const agentRef = JSON.parse(agentRaw) as AgentRef;
+                if (agentRef?.agent_id) {
+                  onDropAgent(agent, agentRef);
+                }
+              } catch {
+                // invalid JSON
+              }
             }
           }}
         >
@@ -81,6 +86,10 @@ export function AgentsList({ agents, isLoading, loadError, onOpen, onDropToolSch
 
           <div>
             <strong>Assigned tools:</strong> {agent.toolSchemas?.length ?? 0}
+          </div>
+
+          <div>
+            <strong>Assigned subagents:</strong> {agent.subAgents?.length ?? 0}
           </div>
         </Card>
       ))}

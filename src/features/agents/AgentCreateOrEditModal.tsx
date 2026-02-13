@@ -7,14 +7,17 @@ import { TextArea } from "@/ui/TextArea";
 import { ScrollContainer } from "@/ui/ScrollContainer";
 import { Button } from "@/ui/Button";
 import { Checkbox } from "@/ui/CheckBox";
-import type { Agent } from "@/models/agent";
+import type { Agent, AgentRef } from "@/models/agent";
 import { normalizeAgent, validateAgent } from "@/models/agent";
 import type { StoredItem } from "@/storage/operations";
 import { ToolBadge } from "@/ui/ToolBadge";
+import { AgentBadge } from "@/ui/AgentBadge";
 
 type AgentCreateOrEditModalProps = {
   isOpen: boolean;
   initialAgent?: StoredItem<Agent> | null;
+  modalMode: "orchestrator" | "subagent";
+  availableAgents: Array<StoredItem<Agent>>;
   onClose: () => void;
   onSubmit: (agent: Agent) => void;
 };
@@ -22,6 +25,8 @@ type AgentCreateOrEditModalProps = {
 export function AgentCreateOrEditModal({
   isOpen,
   initialAgent = null,
+  modalMode,
+  availableAgents,
   onClose,
   onSubmit,
 }: AgentCreateOrEditModalProps) {
@@ -29,6 +34,10 @@ export function AgentCreateOrEditModal({
 
   const [assignedTools, setAssignedTools] = useState(
     initialAgent?.toolSchemas ?? []
+  );
+
+  const [assignedAgents, setAssignedAgents] = useState<AgentRef[]>(
+    initialAgent?.subAgents ?? []
   );
 
   // initialize state from initialAgent (edit) or defaults (create)
@@ -79,6 +88,7 @@ export function AgentCreateOrEditModal({
     setToolbasedAnswerPrompt("");
     setMaxToolcalls("");
     setOnlyOneModelCall(false);
+    setAssignedAgents([]);
     setError(null);
   };
 
@@ -101,6 +111,8 @@ export function AgentCreateOrEditModal({
         maxToolcalls: parsedMaxToolcalls,
         onlyOneModelCall,
         toolSchemas: assignedTools,
+        isOrchestrator: modalMode === "orchestrator",
+        subAgents: modalMode === "orchestrator" ? assignedAgents : undefined,
       };
 
       const normalized = normalizeAgent(agent);
@@ -123,6 +135,12 @@ export function AgentCreateOrEditModal({
   const handleRemoveTool = (tool_id: string, container: string) => {
     setAssignedTools((prev) =>
       prev.filter((t) => !(t.tool_id === tool_id && t.container === container))
+    );
+  };
+
+  const handleRemoveAgent = (agent_id: string, container: string) => {
+    setAssignedAgents((prev) =>
+      prev.filter((a) => !(a.agent_id === agent_id && a.container === container))
     );
   };
 
@@ -201,6 +219,25 @@ export function AgentCreateOrEditModal({
           </div>
         ) : (
           <div className="formHint">No tools assigned yet.</div>
+        )}
+
+        {modalMode === "orchestrator" && (
+          <>
+            <div className="formLabel">Assigned Subagents</div>
+            {assignedAgents.length > 0 ? (
+              <div className="toolBadges">
+                {assignedAgents.map((agent) => (
+                  <AgentBadge
+                    key={`${agent.container}::${agent.agent_id}`}
+                    agentRef={agent}
+                    onRemove={() => handleRemoveAgent(agent.agent_id, agent.container)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="formHint">No subagents assigned yet.</div>
+            )}
+          </>
         )}
       </ScrollContainer>
 

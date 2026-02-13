@@ -4,9 +4,10 @@ type Props = {
   agentRef: AgentRef;
   onClick?: (agentRef: AgentRef) => void;
   selected?: boolean;
+  onRemove?: (agentRef: AgentRef) => void; // optional
 };
 
-export function AgentBadge({ agentRef, onClick, selected }: Props) {
+export function AgentBadge({ agentRef, onClick, selected, onRemove }: Props) {
   const isClickable = Boolean(onClick);
 
   const className = selected ? "agentBadge agentBadge--selected" : "agentBadge";
@@ -28,6 +29,17 @@ export function AgentBadge({ agentRef, onClick, selected }: Props) {
       <div className="agentBadgeText" title={agentRef.name}>
         <div className="agentBadgeName">{agentRef.name}</div>
       </div>
+
+      {onRemove && (
+        <button
+          type="button"
+          className="toolBadgeRemove"
+          onClick={() => onRemove(agentRef)}
+          aria-label="Remove agent"
+        >
+          ×
+        </button>
+      )}
     </div>
   );
 }

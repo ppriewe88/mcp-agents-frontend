@@ -52,6 +52,13 @@
   --card-agent-shadow: -8px 12px 12px rgba(100, 130, 200, 1);
   --card-agent-hover-shadow: -10px 14px 14px rgba(100, 130, 200, 1);
 
+  --card-orchestrator-border: rgb(248, 229, 200);
+  --card-orchestrator-hover-bg: rgb(230, 160, 90);
+  --card-orchestrator-hover-border: rgb(230, 160, 90);
+  --card-orchestrator-bg: var(--color-surface);
+  --card-orchestrator-shadow: -8px 12px 12px rgba(200, 130, 60, 1);
+  --card-orchestrator-hover-shadow: -10px 14px 14px rgba(200, 130, 60, 1);
+
   --card-toolschema-border: rgb(199, 241, 227);
   --card-toolschema-hover-bg: rgb(66, 192, 150);
   --card-toolschema-hover-border: rgb(66, 192, 150);
@@ -359,7 +366,8 @@ a {
     border-color var(--transition-fast);
 }
 
-.card:hover {
+.card:hover,
+.card.highlighted {
   background: var(--_card-hover-bg);
   border-color: var(--_card-hover-border);
   box-shadow: var(--_card-hover-shadow);
@@ -395,6 +403,15 @@ a {
   --_card-hover-bg: var(--card-agent-hover-bg);
   --_card-hover-border: var(--card-agent-hover-border);
   --_card-hover-shadow: var(--card-agent-hover-shadow);
+}
+
+.card[data-variant="orchestrator"] {
+  --_card-bg: var(--card-orchestrator-bg);
+  --_card-border: var(--card-orchestrator-border);
+  --_card-shadow: var(--card-orchestrator-shadow);
+  --_card-hover-bg: var(--card-orchestrator-hover-bg);
+  --_card-hover-border: var(--card-orchestrator-hover-border);
+  --_card-hover-shadow: var(--card-orchestrator-hover-shadow);
 }
 
 .card[data-variant="toolschema"] {
@@ -490,19 +507,6 @@ a {
   min-height: unset;
   padding-top: 8px;
   padding-bottom: 8px;
-}
-
-.listAreaHalf {
-  width: 50%;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 16px;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: var(--color-surface);
-  box-shadow: var(--shadow);
 }
 
 .listAreaTitle {
