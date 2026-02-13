@@ -40,10 +40,15 @@ type ToolSchemaDto = {
   args_schema: ToolArgsSchemaDto;
 };
 
-export type StreamAgentRequestDTO = {
-  messages: Array<ChatMessageModel>;
+type AgentBundleDto = {
   agent_config: AgentConfigDto;
   tool_schemas: ToolSchemaDto[];
+};
+
+export type StreamAgentRequestDTO = {
+  messages: Array<ChatMessageModel>;
+  agent: AgentBundleDto;
+  subagents?: AgentBundleDto[];
 };
 
 export function toAgentConfigDto(frontendAgent: Agent): AgentConfigDto {

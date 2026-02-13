@@ -14,12 +14,17 @@ export type StepItem = {
   text: string; // erstmal nur Textanzeige, später strukturierter
 };
 
+export type ResolvedAgent = {
+  agent: StoredItem<Agent>;
+  toolSchemas: ToolSchema[];
+};
+
 type InvokeAgentArgs = {
   onFinalText: (appendText: string) => void;
   onStep: (item: StepItem) => void;
   messages: Array<ChatMessageModel>;
-  agent: StoredItem<Agent>;
-  toolSchemas: ToolSchema[];
+  resolvedAgent: ResolvedAgent;
+  resolvedSubAgents?: Array<ResolvedAgent>;
 };
 
 type NdjsonChunk = {
@@ -32,13 +37,18 @@ function makeStepItem(result: Extract<StreamControlResult, { kind: "step" }>): S
   return { id: crypto.randomUUID(), kind: "step", level: result.level, text: result.text };
 }
 
-export async function invokeAgent({ onFinalText, onStep, messages, agent, toolSchemas }: InvokeAgentArgs): Promise<void> {
+export async function invokeAgent({ onFinalText, onStep, messages, resolvedAgent, resolvedSubAgents }: InvokeAgentArgs): Promise<void> {
   const url = "http://127.0.0.1:3001/stream-test";
+
+  const toBundle = (r: ResolvedAgent) => ({
+    agent_config: toAgentConfigDto(r.agent),
+    tool_schemas: r.toolSchemas.map(toToolSchemaDto)
+  });
 
   const payload: StreamAgentRequestDTO = {
     messages,
-    agent_config: toAgentConfigDto(agent),
-    tool_schemas: toolSchemas.map(toToolSchemaDto)
+    agent: toBundle(resolvedAgent),
+    subagents: resolvedSubAgents?.map(toBundle)
   };
 
   const res = await fetch(url, {
